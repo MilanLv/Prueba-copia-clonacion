@@ -1,0 +1,287 @@
+<div class="container mx-auto px-4 py-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Gestión de Productos</h1>
+      <p class="text-gray-600 mt-1">Administra el inventario de productos</p>
+    </div>
+    <div class="flex space-x-3">
+      <button 
+        (click)="generateBarcodesBatch()"
+        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+        <i class="fas fa-barcode"></i>
+        <span>Generar Códigos</span>
+      </button>
+      <button 
+        (click)="goToNewProducto()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+        <i class="fas fa-plus"></i>
+        <span>Nuevo Producto</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" *ngIf="stats">
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex items-center">
+        <div class="p-2 bg-blue-100 rounded-lg">
+          <i class="fas fa-box text-blue-600"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-600">Total Productos</p>
+          <p class="text-2xl font-bold text-gray-900">{{ stats.total_productos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex items-center">
+        <div class="p-2 bg-green-100 rounded-lg">
+          <i class="fas fa-check-circle text-green-600"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-600">Con Stock</p>
+          <p class="text-2xl font-bold text-gray-900">{{ stats.con_stock }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex items-center">
+        <div class="p-2 bg-red-100 rounded-lg">
+          <i class="fas fa-exclamation-triangle text-red-600"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-600">Stock Bajo</p>
+          <p class="text-2xl font-bold text-gray-900">{{ stats.stock_bajo }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+      <div class="flex items-center">
+        <div class="p-2 bg-purple-100 rounded-lg">
+          <i class="fas fa-dollar-sign text-purple-600"></i>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-gray-600">Valor Inventario</p>
+          <p class="text-2xl font-bold text-gray-900">${{ stats.valor_inventario | number:'1.2-2' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros y búsqueda -->
+  <div class="bg-white p-4 rounded-lg shadow mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Búsqueda -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Productos</label>
+        <div class="relative">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="searchProductos()"
+            placeholder="Buscar por descripción, código o código de barras..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+
+      <!-- Filtro de stock -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Estado de Stock</label>
+        <select 
+          [(ngModel)]="selectedStockFilter"
+          (change)="loadProductos()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option *ngFor="let filter of stockFilters" [value]="filter.value">
+            {{ filter.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Botones de filtros rápidos -->
+      <div class="flex flex-col space-y-2">
+        <button 
+          (click)="loadLowStock()"
+          class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-2 rounded-lg text-sm">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          Stock Bajo
+        </button>
+        <button 
+          (click)="loadWithoutBarcode()"
+          class="bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-2 rounded-lg text-sm">
+          <i class="fas fa-barcode mr-1"></i>
+          Sin Código
+        </button>
+        <button 
+          (click)="loadTopSelling()"
+          class="bg-green-100 hover:bg-green-200 text-green-800 px-3 py-2 rounded-lg text-sm">
+          <i class="fas fa-chart-line mr-1"></i>
+          Más Vendidos
+        </button>
+        <button 
+          (click)="clearFilters()"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm">
+          <i class="fas fa-times mr-1"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando productos...</span>
+  </div>
+
+  <!-- Tabla de productos -->
+  <div *ngIf="!loading" class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Imagen
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Código
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Descripción
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Precio
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Stock
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Código de Barras
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Ventas
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let producto of filteredProductos" class="hover:bg-gray-50">
+            <!-- Imagen -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex-shrink-0 h-12 w-12">
+                <img 
+                  [src]="getImageUrl(producto)" 
+                  [alt]="producto.descripcion"
+                  class="h-12 w-12 rounded-lg object-cover">
+              </div>
+            </td>
+
+            <!-- Código -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">
+                {{ producto.cod || 'Sin código' }}
+              </div>
+            </td>
+
+            <!-- Descripción -->
+            <td class="px-6 py-4">
+              <div class="text-sm font-medium text-gray-900">
+                {{ producto.descripcion }}
+              </div>
+            </td>
+
+            <!-- Precio -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">
+                ${{ producto.precio | number:'1.2-2' }}
+              </div>
+            </td>
+
+            <!-- Stock -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <span class="text-sm font-medium text-gray-900 mr-2">
+                  {{ producto.cantidad }}
+                </span>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                      [class]="getStockBadgeClass(producto.estado_stock)">
+                  {{ producto.estado_stock }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Código de Barras -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-900">
+                  {{ producto.codigo_barras || 'Sin código' }}
+                </span>
+                <button 
+                  *ngIf="!producto.tiene_codigo_barras"
+                  (click)="generateBarcode(producto)"
+                  class="text-blue-600 hover:text-blue-800"
+                  title="Generar código de barras">
+                  <i class="fas fa-barcode"></i>
+                </button>
+              </div>
+            </td>
+
+            <!-- Ventas -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">
+                {{ producto.total_ventas || 0 }}
+              </div>
+            </td>
+
+            <!-- Acciones -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <button 
+                  (click)="goToDetailProducto(producto)"
+                  class="text-blue-600 hover:text-blue-800"
+                  title="Ver detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button 
+                  (click)="goToEditProducto(producto)"
+                  class="text-green-600 hover:text-green-800"
+                  title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button 
+                  (click)="deleteProducto(producto)"
+                  class="text-red-600 hover:text-red-800"
+                  title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay productos -->
+    <div *ngIf="filteredProductos.length === 0" class="text-center py-8">
+      <i class="fas fa-box-open text-4xl text-gray-400 mb-4"></i>
+      <p class="text-gray-500 text-lg">No se encontraron productos</p>
+      <p class="text-gray-400">Intenta ajustar los filtros de búsqueda</p>
+    </div>
+  </div>
+
+  <!-- Paginación (opcional) -->
+  <div *ngIf="filteredProductos.length > 0" class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-700">
+      Mostrando {{ filteredProductos.length }} productos
+    </div>
+  </div>
+</div>

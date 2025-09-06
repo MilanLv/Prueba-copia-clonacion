@@ -88,6 +88,22 @@ export const routes: Routes = [
                        path: 'permisos/detalle/:id',
                        loadComponent: () => import('./business/permisos/permisos-detail/permisos-detail.component').then(m => m.PermisosDetailComponent)
                    },
+                   {
+                       path: 'productos',
+                       loadComponent: () => import('./business/productos/productos-list/productos-list.component').then(m => m.ProductosListComponent)
+                   },
+                   {
+                       path: 'productos/nuevo',
+                       loadComponent: () => import('./business/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent)
+                   },
+                   {
+                       path: 'productos/editar/:id',
+                       loadComponent: () => import('./business/productos/productos-form/productos-form.component').then(m => m.ProductosFormComponent)
+                   },
+                   {
+                       path: 'productos/detalle/:id',
+                       loadComponent: () => import('./business/productos/productos-detail/productos-detail.component').then(m => m.ProductosDetailComponent)
+                   },
             {
                 path: '',
                 redirectTo: 'dashboard',

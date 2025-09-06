@@ -1,0 +1,206 @@
+<div class="container mx-auto px-4 py-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Detalle del Producto</h1>
+      <p class="text-gray-600 mt-1">Información completa del producto</p>
+    </div>
+    <div class="flex space-x-3">
+      <button 
+        (click)="goBack()"
+        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+        <i class="fas fa-arrow-left"></i>
+        <span>Volver</span>
+      </button>
+      <button 
+        (click)="goToEdit()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+        <i class="fas fa-edit"></i>
+        <span>Editar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    <i class="fas fa-exclamation-circle mr-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando producto...</span>
+  </div>
+
+  <!-- Detalle del producto -->
+  <div *ngIf="producto && !loading" class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+      
+      <!-- Información principal -->
+      <div class="p-6 border-b">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:space-x-6">
+          
+          <!-- Imagen del producto -->
+          <div class="flex-shrink-0 mb-6 lg:mb-0">
+            <img 
+              [src]="getImageUrl()" 
+              [alt]="producto.descripcion"
+              class="w-48 h-48 object-cover rounded-lg border">
+          </div>
+
+          <!-- Información básica -->
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">
+              {{ producto.descripcion }}
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <span class="text-sm font-medium text-gray-500">Código Interno:</span>
+                <p class="text-lg font-semibold text-gray-900">
+                  {{ producto.cod || 'Sin código' }}
+                </p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Precio:</span>
+                <p class="text-2xl font-bold text-green-600">
+                  ${{ producto.precio | number:'1.2-2' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Estado de stock -->
+            <div class="flex items-center space-x-4">
+              <div>
+                <span class="text-sm font-medium text-gray-500">Stock:</span>
+                <p class="text-xl font-semibold text-gray-900">
+                  {{ producto.cantidad }} unidades
+                </p>
+              </div>
+              <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full"
+                    [class]="getStockBadgeClass(producto.estado_stock)">
+                {{ producto.estado_stock }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información detallada -->
+      <div class="p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Columna izquierda -->
+          <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Información del Producto</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <span class="text-sm font-medium text-gray-500">ID del Producto:</span>
+                <p class="text-gray-900">{{ producto.id }}</p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Descripción:</span>
+                <p class="text-gray-900">{{ producto.descripcion }}</p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Precio Unitario:</span>
+                <p class="text-gray-900">${{ producto.precio | number:'1.2-2' }}</p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Cantidad en Stock:</span>
+                <p class="text-gray-900">{{ producto.cantidad }} unidades</p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Valor Total del Stock:</span>
+                <p class="text-gray-900">${{ (producto.cantidad * producto.precio) | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna derecha -->
+          <div class="space-y-6">
+            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Códigos y Estadísticas</h3>
+            
+            <div class="space-y-4">
+              <!-- Código de barras -->
+              <div>
+                <span class="text-sm font-medium text-gray-500">Código de Barras:</span>
+                <div class="flex items-center space-x-2 mt-1">
+                  <p class="text-gray-900 font-mono">
+                    {{ producto.codigo_barras || 'Sin código de barras' }}
+                  </p>
+                  <button 
+                    *ngIf="!producto.tiene_codigo_barras"
+                    (click)="generateBarcode()"
+                    class="text-blue-600 hover:text-blue-800"
+                    title="Generar código de barras">
+                    <i class="fas fa-barcode"></i>
+                  </button>
+                </div>
+                <div class="mt-2">
+                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                        [class]="producto.tiene_codigo_barras ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                    {{ producto.tiene_codigo_barras ? 'Con código de barras' : 'Sin código de barras' }}
+                  </span>
+                  <span *ngIf="producto.codigo_barras_generado" 
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 ml-2">
+                    Generado automáticamente
+                  </span>
+                </div>
+                
+                <!-- Visualización del código de barras -->
+                <div *ngIf="producto.codigo_barras" class="mt-4 p-4 bg-white border rounded-lg">
+                  <h4 class="text-sm font-medium text-gray-700 mb-2">Vista previa del código de barras:</h4>
+                  <app-barcode-display 
+                    [code]="producto.codigo_barras"
+                    [format]="'CODE128'"
+                    [width]="2"
+                    [height]="80"
+                    [showText]="true">
+                  </app-barcode-display>
+                </div>
+              </div>
+
+              <!-- Estadísticas de ventas -->
+              <div>
+                <span class="text-sm font-medium text-gray-500">Total de Ventas:</span>
+                <p class="text-gray-900">{{ producto.total_ventas || 0 }} ventas</p>
+              </div>
+              
+              <div>
+                <span class="text-sm font-medium text-gray-500">Total de Cotizaciones:</span>
+                <p class="text-gray-900">{{ producto.total_cotizaciones || 0 }} cotizaciones</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="mt-8 pt-6 border-t">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Información de Fechas</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span class="text-sm font-medium text-gray-500">Fecha de Creación:</span>
+              <p class="text-gray-900">
+                {{ producto.create_date | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+            </div>
+            <div>
+              <span class="text-sm font-medium text-gray-500">Última Actualización:</span>
+              <p class="text-gray-900">
+                {{ producto.update_date | date:'dd/MM/yyyy HH:mm' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
