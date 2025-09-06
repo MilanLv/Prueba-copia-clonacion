@@ -1,0 +1,202 @@
+<div class="container mx-auto px-4 py-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+    <button (click)="goToNewUsuario()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+      <i class="fas fa-plus mr-2"></i>Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Búsqueda -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Nombre, CI o correo..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <!-- Filtro por rol -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+        <select
+          [(ngModel)]="selectedRol"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los roles</option>
+          <option *ngFor="let rol of roles" [value]="rol.id">{{ rol.nombre }}</option>
+        </select>
+      </div>
+
+      <!-- Mostrar inactivos -->
+      <div class="flex items-center">
+        <input
+          type="checkbox"
+          [(ngModel)]="showInactive"
+          id="showInactive"
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label for="showInactive" class="ml-2 block text-sm text-gray-700">
+          Mostrar inactivos
+        </label>
+      </div>
+
+      <!-- Limpiar filtros -->
+      <div class="flex items-end">
+        <button
+          (click)="clearFilters()"
+          class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition-colors"
+        >
+          Limpiar Filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando usuarios...</span>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div *ngIf="!loading" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Usuario
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              CI
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Correo
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rol
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Último Acceso
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let usuario of filteredUsuarios" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-10 w-10">
+                  <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">
+                      {{ usuario.nombre_completo.charAt(0).toUpperCase() }}
+                    </span>
+                  </div>
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">{{ usuario.nombre_completo }}</div>
+                  <div class="text-sm text-gray-500">{{ usuario.telefono || 'Sin teléfono' }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ usuario.ci }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ usuario.correo }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ getRolNombre(usuario.id_rol) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                [class]="usuario.activo 
+                  ? 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'
+                  : 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'"
+              >
+                {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {{ usuario.ultimo_acceso ? (usuario.ultimo_acceso | date:'short') : 'Nunca' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <button
+                  (click)="goToDetailUsuario(usuario)"
+                  class="text-blue-600 hover:text-blue-900"
+                  title="Ver detalles"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button
+                  (click)="goToEditUsuario(usuario)"
+                  class="text-green-600 hover:text-green-900"
+                  title="Editar"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  (click)="toggleUsuario(usuario)"
+                  [class]="usuario.activo 
+                    ? 'text-yellow-600 hover:text-yellow-900' 
+                    : 'text-green-600 hover:text-green-900'"
+                  [title]="usuario.activo ? 'Desactivar' : 'Activar'"
+                >
+                  <i [class]="usuario.activo ? 'fas fa-pause' : 'fas fa-play'"></i>
+                </button>
+                <button
+                  (click)="deleteUsuario(usuario)"
+                  class="text-red-600 hover:text-red-900"
+                  title="Eliminar"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="filteredUsuarios.length === 0" class="text-center py-8">
+      <div class="text-gray-500">
+        <i class="fas fa-users text-4xl mb-4"></i>
+        <p class="text-lg">No se encontraron usuarios</p>
+        <p class="text-sm">Intenta ajustar los filtros de búsqueda</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación (opcional) -->
+  <div *ngIf="!loading && filteredUsuarios.length > 0" class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-700">
+      Mostrando {{ filteredUsuarios.length }} de {{ usuarios.length }} usuarios
+    </div>
+    <div class="flex space-x-2">
+      <button class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">
+        Anterior
+      </button>
+      <button class="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50">
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>

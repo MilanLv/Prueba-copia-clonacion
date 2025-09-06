@@ -1,0 +1,177 @@
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Detalle del Usuario</h2>
+    <p class="text-gray-600">Información completa del usuario seleccionado</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando usuario...</span>
+  </div>
+
+  <!-- Usuario Details -->
+  <div *ngIf="!loading && usuario" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Header con avatar y nombre -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-8">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="h-20 w-20 rounded-full bg-white flex items-center justify-center">
+            <span class="text-blue-600 font-bold text-2xl">
+              {{ usuario.nombre_completo.charAt(0).toUpperCase() }}
+            </span>
+          </div>
+        </div>
+        <div class="ml-6">
+          <h3 class="text-2xl font-bold text-white">{{ usuario.nombre_completo }}</h3>
+          <p class="text-blue-100">{{ usuario.correo }}</p>
+          <div class="mt-2">
+            <span
+              [class]="usuario.activo 
+                ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800'
+                : 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800'"
+            >
+              {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información detallada -->
+    <div class="px-6 py-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Información Personal -->
+        <div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-4">Información Personal</h4>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Cédula de Identidad</dt>
+              <dd class="text-sm text-gray-900">{{ usuario.ci }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Nombre Completo</dt>
+              <dd class="text-sm text-gray-900">{{ usuario.nombre_completo }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Teléfono</dt>
+              <dd class="text-sm text-gray-900">{{ usuario.telefono || 'No especificado' }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Correo Electrónico</dt>
+              <dd class="text-sm text-gray-900">{{ usuario.correo }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Información del Sistema -->
+        <div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-4">Información del Sistema</h4>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Rol</dt>
+              <dd class="text-sm text-gray-900">{{ usuario.rol_nombre || 'Sin rol asignado' }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Estado</dt>
+              <dd class="text-sm">
+                <span
+                  [class]="usuario.activo 
+                    ? 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'
+                    : 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'"
+                >
+                  {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Último Acceso</dt>
+              <dd class="text-sm text-gray-900">{{ formatDate(usuario.ultimo_acceso) }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Fecha de Creación</dt>
+              <dd class="text-sm text-gray-900">{{ formatDate(usuario.create_date) }}</dd>
+            </div>
+            <div *ngIf="usuario.update_date">
+              <dt class="text-sm font-medium text-gray-500">Última Actualización</dt>
+              <dd class="text-sm text-gray-900">{{ formatDate(usuario.update_date) }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Estadísticas (si están disponibles) -->
+      <div *ngIf="usuario.total_ventas !== undefined || usuario.total_cotizaciones !== undefined" 
+           class="mt-8 pt-6 border-t border-gray-200">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Estadísticas de Actividad</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <i class="fas fa-shopping-cart text-blue-600 text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-blue-600">Total de Ventas</p>
+                <p class="text-2xl font-bold text-blue-900">{{ usuario.total_ventas || 0 }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-4">
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <i class="fas fa-file-invoice text-green-600 text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-green-600">Total de Cotizaciones</p>
+                <p class="text-2xl font-bold text-green-900">{{ usuario.total_cotizaciones || 0 }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción del Rol (si está disponible) -->
+      <div *ngIf="usuario.rol_descripcion" class="mt-8 pt-6 border-t border-gray-200">
+        <h4 class="text-lg font-semibold text-gray-900 mb-4">Descripción del Rol</h4>
+        <p class="text-sm text-gray-700 bg-gray-50 rounded-lg p-4">
+          {{ usuario.rol_descripcion }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <div class="flex justify-end space-x-4">
+        <button class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <i class="fas fa-edit mr-2"></i>Editar
+        </button>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <i class="fas fa-key mr-2"></i>Cambiar Contraseña
+        </button>
+        <button 
+          [class]="usuario.activo 
+            ? 'px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700'
+            : 'px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700'"
+        >
+          <i [class]="usuario.activo ? 'fas fa-pause mr-2' : 'fas fa-play mr-2'"></i>
+          {{ usuario.activo ? 'Desactivar' : 'Activar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !usuario && !error" class="text-center py-8">
+    <div class="text-gray-500">
+      <i class="fas fa-user text-4xl mb-4"></i>
+      <p class="text-lg">No se encontró el usuario</p>
+      <p class="text-sm">Verifica que el ID del usuario sea correcto</p>
+    </div>
+  </div>
+</div>

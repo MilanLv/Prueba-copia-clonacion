@@ -1,0 +1,301 @@
+<div class="container mx-auto px-4 py-6">
+  <!-- Header simple -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Gestión de Permisos</h1>
+      <p class="text-gray-600 mt-1">Administra los permisos por rol y módulo</p>
+    </div>
+    <div class="flex gap-3">
+      <button 
+        (click)="toggleMatrix()" 
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+        {{ showMatrix ? 'Vista Lista' : 'Vista Matriz' }}
+      </button>
+      <button 
+        (click)="goToNewPermiso()" 
+        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+        <i class="fas fa-plus mr-2"></i>Nuevo Permiso
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros simples -->
+  <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Buscar por rol o módulo..."
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+        <select
+          [(ngModel)]="selectedRol"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los roles</option>
+          <option *ngFor="let rol of roles" [value]="rol.id">
+            {{ rol.nombre }}
+          </option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Módulo</label>
+        <select
+          [(ngModel)]="selectedModulo"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los módulos</option>
+          <option *ngFor="let modulo of modulos" [value]="modulo.id">
+            {{ modulo.nombre }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {{ error }}
+  </div>
+
+  <!-- Mensaje cuando no hay datos -->
+  <div *ngIf="!loading && (roles.length === 0 || modulos.length === 0)" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+    <div class="flex items-center">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <span *ngIf="roles.length === 0">No hay roles disponibles. </span>
+      <span *ngIf="modulos.length === 0">No hay módulos disponibles. </span>
+      <span>Por favor, crea roles y módulos antes de asignar permisos.</span>
+    </div>
+  </div>
+
+  <!-- Vista Matriz con Checkboxes -->
+  <div *ngIf="showMatrix && !loading && roles.length > 0 && modulos.length > 0" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <h2 class="text-xl font-semibold text-gray-900">Matriz de Permisos</h2>
+      <p class="text-gray-600 text-sm">Haz clic en los checkboxes para asignar permisos</p>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rol / Módulo
+            </th>
+            <th *ngFor="let modulo of modulos; trackBy: trackByModuloId" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <div class="flex flex-col items-center">
+                <span class="font-bold">{{ modulo.nombre }}</span>
+                <span class="text-xs text-gray-400">{{ modulo.descripcion }}</span>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let rol of roles; trackBy: trackByRolId" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ rol.nombre }}</div>
+                  <div class="text-sm text-gray-500">{{ rol.descripcion }}</div>
+                </div>
+                <button
+                  (click)="selectRoleForEdit(rol.id)"
+                  [class]="'px-2 py-1 text-xs rounded ' + (selectedRoleForEdit === rol.id ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600')"
+                >
+                  {{ selectedRoleForEdit === rol.id ? 'Editando' : 'Editar' }}
+                </button>
+              </div>
+            </td>
+            <td *ngFor="let modulo of modulos; trackBy: trackByModuloId" class="px-6 py-4 whitespace-nowrap text-center">
+              <div class="grid grid-cols-2 gap-2 w-20 mx-auto">
+                <!-- Crear -->
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [checked]="hasPermission(rol.id, modulo.id, 'crear')"
+                    (change)="togglePermission(rol.id, modulo.id, 'crear')"
+                    class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  >
+                  <span class="ml-1 text-xs text-green-600 font-medium">C</span>
+                </label>
+                
+                <!-- Leer -->
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [checked]="hasPermission(rol.id, modulo.id, 'leer')"
+                    (change)="togglePermission(rol.id, modulo.id, 'leer')"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <span class="ml-1 text-xs text-blue-600 font-medium">L</span>
+                </label>
+                
+                <!-- Actualizar -->
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [checked]="hasPermission(rol.id, modulo.id, 'actualizar')"
+                    (change)="togglePermission(rol.id, modulo.id, 'actualizar')"
+                    class="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
+                  >
+                  <span class="ml-1 text-xs text-yellow-600 font-medium">A</span>
+                </label>
+                
+                <!-- Eliminar -->
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    [checked]="hasPermission(rol.id, modulo.id, 'eliminar')"
+                    (change)="togglePermission(rol.id, modulo.id, 'eliminar')"
+                    class="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  >
+                  <span class="ml-1 text-xs text-red-600 font-medium">E</span>
+                </label>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Leyenda -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <div class="flex flex-wrap items-center justify-center space-x-6 text-sm text-gray-600">
+        <div class="flex items-center">
+          <i class="fas fa-plus text-green-600 mr-1"></i>
+          <span>C = Crear</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-eye text-blue-600 mr-1"></i>
+          <span>L = Leer</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-edit text-yellow-600 mr-1"></i>
+          <span>A = Actualizar</span>
+        </div>
+        <div class="flex items-center">
+          <i class="fas fa-trash text-red-600 mr-1"></i>
+          <span>E = Eliminar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista Lista -->
+  <div *ngIf="!showMatrix && !loading" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900">Lista de Permisos</h2>
+      <p class="text-sm text-gray-600">{{ filteredPermisos.length }} permisos encontrados</p>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rol
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Módulo
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Crear
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Leer
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actualizar
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Eliminar
+            </th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let permiso of filteredPermisos" class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ permiso.rol_nombre }}</div>
+              <div class="text-sm text-gray-500">{{ permiso.rol_descripcion }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ permiso.modulo_nombre }}</div>
+              <div class="text-sm text-gray-500">{{ permiso.modulo_descripcion }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <i 
+                [class]="permiso.puede_crear ? 'fas fa-check text-green-600' : 'fas fa-times text-red-600'"
+              ></i>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <i 
+                [class]="permiso.puede_leer ? 'fas fa-check text-green-600' : 'fas fa-times text-red-600'"
+              ></i>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <i 
+                [class]="permiso.puede_actualizar ? 'fas fa-check text-green-600' : 'fas fa-times text-red-600'"
+              ></i>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <i 
+                [class]="permiso.puede_eliminar ? 'fas fa-check text-green-600' : 'fas fa-times text-red-600'"
+              ></i>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+              <div class="flex justify-center space-x-2">
+                <button
+                  (click)="goToDetailPermiso(permiso.id)"
+                  class="text-blue-600 hover:text-blue-900"
+                  title="Ver detalle"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button
+                  (click)="goToEditPermiso(permiso.id)"
+                  class="text-yellow-600 hover:text-yellow-900"
+                  title="Editar"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  (click)="deletePermiso(permiso.id)"
+                  class="text-red-600 hover:text-red-900"
+                  title="Eliminar"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredPermisos.length === 0" class="text-center py-8">
+      <i class="fas fa-shield-alt text-4xl text-gray-400 mb-4"></i>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">No hay permisos</h3>
+      <p class="text-gray-500 mb-4">No se encontraron permisos con los filtros aplicados.</p>
+      <button
+        (click)="goToNewPermiso()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+      >
+        <i class="fas fa-plus mr-2"></i>Crear Primer Permiso
+      </button>
+    </div>
+  </div>
+</div>

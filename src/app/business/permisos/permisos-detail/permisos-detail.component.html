@@ -1,0 +1,165 @@
+<div class="container mx-auto px-4 py-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Detalle del Permiso</h1>
+    <button
+      (click)="goBack()"
+      class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+    >
+      <i class="fas fa-arrow-left mr-2"></i>Volver
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {{ error }}
+  </div>
+
+  <!-- Permiso Details -->
+  <div *ngIf="permiso && !loading" class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <!-- Header Card -->
+      <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold">{{ permiso.rol_nombre }} - {{ permiso.modulo_nombre }}</h2>
+            <p class="text-blue-100">{{ permiso.rol_descripcion }} / {{ permiso.modulo_descripcion }}</p>
+          </div>
+          <div class="flex space-x-2">
+            <button
+              (click)="goToEdit()"
+              class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <i class="fas fa-edit mr-2"></i>Editar
+            </button>
+            <button
+              (click)="deletePermiso()"
+              class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <i class="fas fa-trash mr-2"></i>Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6">
+        <!-- Información Básica -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              <i class="fas fa-user-tag text-blue-600 mr-2"></i>
+              Información del Rol
+            </h3>
+            <div class="space-y-2">
+              <div>
+                <span class="text-sm font-medium text-gray-500">Nombre:</span>
+                <span class="ml-2 text-gray-900">{{ permiso.rol_nombre }}</span>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Descripción:</span>
+                <span class="ml-2 text-gray-900">{{ permiso.rol_descripcion }}</span>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Estado:</span>
+                <span class="ml-2">
+                  <span [class]="permiso.rol_activo ? 'text-green-600' : 'text-red-600'">
+                    <i [class]="permiso.rol_activo ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                    {{ permiso.rol_activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">
+              <i class="fas fa-cubes text-orange-600 mr-2"></i>
+              Información del Módulo
+            </h3>
+            <div class="space-y-2">
+              <div>
+                <span class="text-sm font-medium text-gray-500">Nombre:</span>
+                <span class="ml-2 text-gray-900">{{ permiso.modulo_nombre }}</span>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Descripción:</span>
+                <span class="ml-2 text-gray-900">{{ permiso.modulo_descripcion }}</span>
+              </div>
+              <div>
+                <span class="text-sm font-medium text-gray-500">Estado:</span>
+                <span class="ml-2">
+                  <span [class]="permiso.modulo_activo ? 'text-green-600' : 'text-red-600'">
+                    <i [class]="permiso.modulo_activo ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                    {{ permiso.modulo_activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permisos -->
+        <div class="bg-gray-50 rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-shield-alt text-purple-600 mr-2"></i>
+            Permisos Asignados
+          </h3>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Crear -->
+            <div class="text-center p-4 rounded-lg" [class]="permiso.puede_crear ? 'bg-green-50 border-2 border-green-200' : 'bg-gray-100 border-2 border-gray-200'">
+              <i [class]="getPermisoIcon('crear') + ' text-2xl mb-2 ' + getPermisoColor('crear', permiso.puede_crear)"></i>
+              <div class="font-medium text-gray-900">Crear</div>
+              <div [class]="'text-sm ' + getPermisoColor('crear', permiso.puede_crear)">
+                {{ permiso.puede_crear ? 'Permitido' : 'Denegado' }}
+              </div>
+            </div>
+
+            <!-- Leer -->
+            <div class="text-center p-4 rounded-lg" [class]="permiso.puede_leer ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-100 border-2 border-gray-200'">
+              <i [class]="getPermisoIcon('leer') + ' text-2xl mb-2 ' + getPermisoColor('leer', permiso.puede_leer)"></i>
+              <div class="font-medium text-gray-900">Leer</div>
+              <div [class]="'text-sm ' + getPermisoColor('leer', permiso.puede_leer)">
+                {{ permiso.puede_leer ? 'Permitido' : 'Denegado' }}
+              </div>
+            </div>
+
+            <!-- Actualizar -->
+            <div class="text-center p-4 rounded-lg" [class]="permiso.puede_actualizar ? 'bg-yellow-50 border-2 border-yellow-200' : 'bg-gray-100 border-2 border-gray-200'">
+              <i [class]="getPermisoIcon('actualizar') + ' text-2xl mb-2 ' + getPermisoColor('actualizar', permiso.puede_actualizar)"></i>
+              <div class="font-medium text-gray-900">Actualizar</div>
+              <div [class]="'text-sm ' + getPermisoColor('actualizar', permiso.puede_actualizar)">
+                {{ permiso.puede_actualizar ? 'Permitido' : 'Denegado' }}
+              </div>
+            </div>
+
+            <!-- Eliminar -->
+            <div class="text-center p-4 rounded-lg" [class]="permiso.puede_eliminar ? 'bg-red-50 border-2 border-red-200' : 'bg-gray-100 border-2 border-gray-200'">
+              <i [class]="getPermisoIcon('eliminar') + ' text-2xl mb-2 ' + getPermisoColor('eliminar', permiso.puede_eliminar)"></i>
+              <div class="font-medium text-gray-900">Eliminar</div>
+              <div [class]="'text-sm ' + getPermisoColor('eliminar', permiso.puede_eliminar)">
+                {{ permiso.puede_eliminar ? 'Permitido' : 'Denegado' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 class="text-sm font-medium text-blue-900 mb-2">Resumen de Permisos</h4>
+          <p class="text-sm text-blue-800">
+            El rol <strong>{{ permiso.rol_nombre }}</strong> tiene 
+            <strong>{{ (permiso.puede_crear ? 1 : 0) + (permiso.puede_leer ? 1 : 0) + (permiso.puede_actualizar ? 1 : 0) + (permiso.puede_eliminar ? 1 : 0) }}</strong> 
+            de 4 permisos habilitados para el módulo <strong>{{ permiso.modulo_nombre }}</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

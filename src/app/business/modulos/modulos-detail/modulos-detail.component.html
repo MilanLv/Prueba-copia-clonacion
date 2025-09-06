@@ -1,0 +1,126 @@
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center space-x-4">
+      <button
+        (click)="goBack()"
+        class="text-gray-600 hover:text-gray-900 transition-colors"
+        title="Volver a la lista"
+      >
+        <i class="fas fa-arrow-left text-xl"></i>
+      </button>
+      <h1 class="text-3xl font-bold text-gray-900">Detalle del Módulo</h1>
+    </div>
+    <button
+      (click)="goToEdit()"
+      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+    >
+      <i class="fas fa-edit mr-2"></i>Editar
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando módulo...</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !loading" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ error }}
+  </div>
+
+  <!-- Module Details -->
+  <div *ngIf="modulo && !loading" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Module Header -->
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-8 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold">{{ modulo.nombre }}</h2>
+          <p class="text-blue-100 mt-1">{{ modulo.descripcion || 'Sin descripción' }}</p>
+        </div>
+        <div class="text-right">
+          <span [class]="modulo.activo 
+            ? 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800'
+            : 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800'">
+            <i [class]="modulo.activo ? 'fas fa-check-circle mr-1' : 'fas fa-times-circle mr-1'"></i>
+            {{ modulo.activo ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Module Content -->
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Basic Information -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Información Básica</h3>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">ID del Módulo</dt>
+              <dd class="text-sm text-gray-900">{{ modulo.id }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Nombre</dt>
+              <dd class="text-sm text-gray-900">{{ modulo.nombre }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Descripción</dt>
+              <dd class="text-sm text-gray-900">{{ modulo.descripcion || 'Sin descripción' }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Estado</dt>
+              <dd class="text-sm">
+                <span [class]="modulo.activo 
+                  ? 'text-green-600 font-medium' 
+                  : 'text-red-600 font-medium'">
+                  {{ modulo.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Statistics -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Estadísticas</h3>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Total de Permisos</dt>
+              <dd class="text-sm text-gray-900">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ modulo.total_permisos || 0 }} permisos
+                </span>
+              </dd>
+            </div>
+            <div *ngIf="modulo.created_at">
+              <dt class="text-sm font-medium text-gray-500">Fecha de Creación</dt>
+              <dd class="text-sm text-gray-900">{{ modulo.created_at | date:'medium' }}</dd>
+            </div>
+            <div *ngIf="modulo.updated_at">
+              <dt class="text-sm font-medium text-gray-500">Última Actualización</dt>
+              <dd class="text-sm text-gray-900">{{ modulo.updated_at | date:'medium' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Permissions Section -->
+      <div class="mt-8 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Permisos Asociados</h3>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="text-center text-gray-500">
+            <i class="fas fa-shield-alt text-3xl mb-2"></i>
+            <p class="text-sm">
+              {{ modulo.total_permisos || 0 }} permisos asociados a este módulo
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+              Los permisos definen qué acciones pueden realizar los roles en este módulo
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

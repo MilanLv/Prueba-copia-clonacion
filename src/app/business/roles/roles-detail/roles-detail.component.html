@@ -1,0 +1,112 @@
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Detalle del Rol</h2>
+    <p class="text-gray-600">Información completa del rol seleccionado</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-2 text-gray-600">Cargando rol...</span>
+  </div>
+
+  <!-- Rol Details -->
+  <div *ngIf="!loading && rol" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Header con icono y nombre -->
+    <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-8">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="h-20 w-20 rounded-full bg-white flex items-center justify-center">
+            <i class="fas fa-user-tag text-purple-600 text-2xl"></i>
+          </div>
+        </div>
+        <div class="ml-6">
+          <h3 class="text-2xl font-bold text-white">{{ rol.nombre }}</h3>
+          <div class="mt-2">
+            <span
+              [class]="rol.activo 
+                ? 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800'
+                : 'inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800'"
+            >
+              {{ rol.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información detallada -->
+    <div class="px-6 py-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Información del Rol -->
+        <div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-4">Información del Rol</h4>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Nombre del Rol</dt>
+              <dd class="text-sm text-gray-900">{{ rol.nombre }}</dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Estado</dt>
+              <dd class="text-sm">
+                <span
+                  [class]="rol.activo 
+                    ? 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800'
+                    : 'inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800'"
+                >
+                  {{ rol.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-medium text-gray-500">Usuarios Asignados</dt>
+              <dd class="text-sm text-gray-900">{{ rol.total_usuarios || 0 }} usuarios</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Descripción -->
+        <div>
+          <h4 class="text-lg font-semibold text-gray-900 mb-4">Descripción</h4>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-sm text-gray-700">
+              {{ rol.descripcion || 'Sin descripción disponible' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <div class="flex justify-end space-x-4">
+        <button class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <i class="fas fa-edit mr-2"></i>Editar
+        </button>
+        <button 
+          [class]="rol.activo 
+            ? 'px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700'
+            : 'px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700'"
+        >
+          <i [class]="rol.activo ? 'fas fa-pause mr-2' : 'fas fa-play mr-2'"></i>
+          {{ rol.activo ? 'Desactivar' : 'Activar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !rol && !error" class="text-center py-8">
+    <div class="text-gray-500">
+      <i class="fas fa-user-tag text-4xl mb-4"></i>
+      <p class="text-lg">No se encontró el rol</p>
+      <p class="text-sm">Verifica que el ID del rol sea correcto</p>
+    </div>
+  </div>
+</div>
