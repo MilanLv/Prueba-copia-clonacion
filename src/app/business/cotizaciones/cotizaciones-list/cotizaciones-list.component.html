@@ -1,0 +1,312 @@
+<!-- ==================================================================== -->
+<!-- COMPONENTE DE LISTA DE COTIZACIONES -->
+<!-- ==================================================================== -->
+<div class="min-h-screen bg-gray-50 p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Lista de Cotizaciones</h1>
+        <p class="text-gray-600 mt-1">Gestiona todas las cotizaciones del sistema</p>
+      </div>
+      <div class="flex gap-3">
+        <button 
+          (click)="crearNuevaCotizacion()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <i class="fas fa-plus"></i>
+          Nueva Cotización
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div *ngIf="estadisticas && !cargandoEstadisticas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+      <div class="flex items-center">
+        <div class="p-2 bg-blue-100 rounded-lg">
+          <i class="fas fa-file-invoice text-blue-600"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Total Cotizaciones</p>
+          <p class="text-2xl font-bold text-gray-900">{{ estadisticas.total_cotizaciones }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+      <div class="flex items-center">
+        <div class="p-2 bg-green-100 rounded-lg">
+          <i class="fas fa-calendar-day text-green-600"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Hoy</p>
+          <p class="text-2xl font-bold text-gray-900">{{ estadisticas.cotizaciones_hoy }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+      <div class="flex items-center">
+        <div class="p-2 bg-yellow-100 rounded-lg">
+          <i class="fas fa-dollar-sign text-yellow-600"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Valor Total</p>
+          <p class="text-2xl font-bold text-gray-900">{{ formatearPrecio(estadisticas.valor_total_cotizado) }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+      <div class="flex items-center">
+        <div class="p-2 bg-purple-100 rounded-lg">
+          <i class="fas fa-chart-line text-purple-600"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-600">Promedio</p>
+          <p class="text-2xl font-bold text-gray-900">{{ formatearPrecio(estadisticas.cotizacion_promedio) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Filtros</h3>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <!-- Búsqueda por texto -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="filtroTexto"
+            (input)="aplicarFiltros()"
+            placeholder="Código, vendedor..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+      </div>
+      
+      <!-- Filtro por fecha inicio -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+        <input
+          type="date"
+          [(ngModel)]="filtroFechaInicio"
+          (change)="aplicarFiltros()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      
+      <!-- Filtro por fecha fin -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+        <input
+          type="date"
+          [(ngModel)]="filtroFechaFin"
+          (change)="aplicarFiltros()"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+      </div>
+      
+      <!-- Botón limpiar filtros -->
+      <div class="flex items-end">
+        <button
+          (click)="limpiarFiltros()"
+          class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+          <i class="fas fa-times"></i>
+          Limpiar Filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Cotizaciones -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <!-- Header de la tabla -->
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">Cotizaciones ({{ totalItems }})</h3>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">Mostrar:</span>
+          <select
+            [(ngModel)]="itemsPorPagina"
+            (change)="aplicarFiltros()"
+            class="px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="cargando" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-3 text-gray-600">Cargando cotizaciones...</span>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!cargando" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th 
+              (click)="ordenarPor('cod')"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+              Código
+              <i *ngIf="campoOrdenamiento === 'cod'" 
+                 [class]="direccionOrdenamiento === 'asc' ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"
+                 class="ml-1"></i>
+            </th>
+            <th 
+              (click)="ordenarPor('fecha')"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+              Fecha
+              <i *ngIf="campoOrdenamiento === 'fecha'" 
+                 [class]="direccionOrdenamiento === 'asc' ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"
+                 class="ml-1"></i>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Vendedor
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Items
+            </th>
+            <th 
+              (click)="ordenarPor('total')"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100">
+              Total
+              <i *ngIf="campoOrdenamiento === 'total'" 
+                 [class]="direccionOrdenamiento === 'asc' ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"
+                 class="ml-1"></i>
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Estado
+            </th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Acciones
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr 
+            *ngFor="let cotizacion of cotizacionesPaginadas" 
+            class="hover:bg-gray-50 transition-colors">
+            
+            <!-- Código -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ cotizacion.cod }}</div>
+            </td>
+            
+            <!-- Fecha -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ formatearFecha(cotizacion.fecha) }}</div>
+            </td>
+            
+            <!-- Vendedor -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ cotizacion.vendedor || 'N/A' }}</div>
+              <div *ngIf="cotizacion.vendedor_ci" class="text-xs text-gray-500">{{ cotizacion.vendedor_ci }}</div>
+            </td>
+            
+            <!-- Items -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-900">{{ cotizacion.total_items || 0 }}</div>
+              <div class="text-xs text-gray-500">{{ cotizacion.total_productos || 0 }} unidades</div>
+            </td>
+            
+            <!-- Total -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-semibold text-gray-900">{{ formatearPrecio(cotizacion.total) }}</div>
+            </td>
+            
+            <!-- Estado -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span 
+                [class]="'px-2 py-1 rounded-full text-xs font-medium ' + obtenerColorEstado(obtenerEstadoCotizacion(cotizacion))">
+                {{ obtenerEstadoCotizacion(cotizacion) }}
+              </span>
+            </td>
+            
+            <!-- Acciones -->
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  (click)="verDetalle(cotizacion.id)"
+                  class="text-blue-600 hover:text-blue-900 transition-colors"
+                  title="Ver detalle">
+                  <i class="fas fa-eye"></i>
+                </button>
+                
+                <button
+                  (click)="editarCotizacion(cotizacion.id)"
+                  class="text-yellow-600 hover:text-yellow-900 transition-colors"
+                  title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                
+                <button
+                  (click)="convertirAVenta(cotizacion.id)"
+                  class="text-green-600 hover:text-green-900 transition-colors"
+                  title="Convertir a venta">
+                  <i class="fas fa-shopping-cart"></i>
+                </button>
+                
+                <button
+                  (click)="eliminarCotizacion(cotizacion.id)"
+                  class="text-red-600 hover:text-red-900 transition-colors"
+                  title="Eliminar">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mensaje cuando no hay cotizaciones -->
+    <div *ngIf="!cargando && cotizacionesFiltradas.length === 0" class="text-center py-12">
+      <i class="fas fa-file-invoice text-4xl text-gray-300 mb-4"></i>
+      <p class="text-gray-500">No se encontraron cotizaciones</p>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div *ngIf="!cargando && totalPaginas > 1" class="mt-6 flex items-center justify-between">
+    <div class="text-sm text-gray-700">
+      Mostrando {{ (paginaActual - 1) * itemsPorPagina + 1 }} a 
+      {{ getMin(paginaActual * itemsPorPagina, totalItems) }} de 
+      {{ totalItems }} resultados
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <button
+        (click)="cambiarPagina(paginaActual - 1)"
+        [disabled]="paginaActual === 1"
+        class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+        Anterior
+      </button>
+      
+      <div class="flex items-center gap-1">
+        <button
+          *ngFor="let pagina of [].constructor(totalPaginas); let i = index"
+          (click)="cambiarPagina(i + 1)"
+          [class]="(i + 1) === paginaActual ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+          class="px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors">
+          {{ i + 1 }}
+        </button>
+      </div>
+      
+      <button
+        (click)="cambiarPagina(paginaActual + 1)"
+        [disabled]="paginaActual === totalPaginas"
+        class="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed">
+        Siguiente
+      </button>
+    </div>
+  </div>
+</div>

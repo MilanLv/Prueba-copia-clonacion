@@ -1,0 +1,305 @@
+<!-- ====================================================================
+     COMPONENTE PRINCIPAL DE VENTAS
+     ==================================================================== -->
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Punto de Venta</h1>
+          <p class="text-gray-600">Gestiona las ventas de productos de forma rápida y eficiente</p>
+        </div>
+        <div class="flex gap-3">
+          <button 
+            (click)="verListaVentas()"
+            class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+            <i class="fas fa-list"></i>
+            Ver Lista
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensajes de estado -->
+    <div *ngIf="mensajeExito" class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+      <div class="flex items-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        {{ mensajeExito }}
+      </div>
+    </div>
+
+    <div *ngIf="mensajeError" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+      <div class="flex items-center">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        {{ mensajeError }}
+      </div>
+    </div>
+
+    <!-- Layout principal: Productos y Carrito -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- ====================================================================
+           COLUMNA IZQUIERDA: PRODUCTOS
+           ==================================================================== -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          
+          <!-- Header de productos -->
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Productos Disponibles</h2>
+            
+            <!-- Filtros y búsqueda -->
+            <div class="space-y-4">
+              <!-- Búsqueda -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Buscar Producto
+                  <span *ngIf="terminoBusqueda && terminoBusqueda.trim() !== ''" class="text-xs text-blue-600 ml-2">
+                    ({{ productosFiltrados.length }} resultado{{ productosFiltrados.length !== 1 ? 's' : '' }})
+                  </span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    [(ngModel)]="terminoBusqueda"
+                    (input)="onBusquedaInput()"
+                    (ngModelChange)="onBusquedaChange()"
+                    placeholder="Buscar por código, descripción, código de barras, precio o cantidad..."
+                    class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                  <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                  <button
+                    *ngIf="terminoBusqueda && terminoBusqueda.trim() !== ''"
+                    (click)="terminoBusqueda = ''; onBusquedaChange()"
+                    class="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <!-- Sugerencias de búsqueda -->
+                <div *ngIf="terminoBusqueda && terminoBusqueda.trim() !== '' && productosFiltrados.length === 0" 
+                     class="mt-2 text-sm text-gray-500">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  No se encontraron productos que coincidan con "{{ terminoBusqueda }}"
+                </div>
+              </div>
+              
+              <!-- Filtros -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Estado de Stock</label>
+                  <select
+                    [(ngModel)]="estadoStockFiltro"
+                    (change)="filtrarProductos()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Todos</option>
+                    <option value="Stock Normal">Stock Normal</option>
+                    <option value="Stock Bajo">Stock Bajo</option>
+                    <option value="Sin Stock">Sin Stock</option>
+                  </select>
+                </div>
+                
+                <div class="flex items-end">
+                  <button
+                    (click)="limpiarFiltros()"
+                    class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar Filtros
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de productos -->
+          <div class="p-6">
+            <div *ngIf="cargandoProductos" class="text-center py-8">
+              <i class="fas fa-spinner fa-spin text-2xl text-gray-400 mb-2"></i>
+              <p class="text-gray-500">Cargando productos...</p>
+            </div>
+
+            <div *ngIf="!cargandoProductos && productosFiltrados.length === 0" class="text-center py-8">
+              <i class="fas fa-box-open text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500">No se encontraron productos</p>
+            </div>
+
+            <div *ngIf="!cargandoProductos && productosFiltrados.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div *ngFor="let producto of productosFiltrados" 
+                   class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                
+                <!-- Imagen del producto -->
+                <div class="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
+                  <img *ngIf="producto.imagen" 
+                       [src]="producto.imagen" 
+                       [alt]="producto.descripcion"
+                       class="w-full h-full object-cover">
+                  <div *ngIf="!producto.imagen" class="w-full h-full flex items-center justify-center">
+                    <i class="fas fa-image text-3xl text-gray-300"></i>
+                  </div>
+                </div>
+
+                <!-- Información del producto -->
+                <div class="space-y-2">
+                  <h3 class="font-medium text-gray-900 text-sm">{{ producto.descripcion }}</h3>
+                  <p class="text-xs text-gray-500">Código: {{ producto.cod }}</p>
+                  <p class="text-xs text-gray-500">Barras: {{ producto.codigo_barras }}</p>
+                  
+                  <!-- Precio y stock -->
+                  <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold text-green-600">{{ formatearPrecio(producto.precio) }}</span>
+                    <span [class]="'px-2 py-1 rounded-full text-xs font-medium ' + obtenerClaseEstadoStock(producto.estado_stock)">
+                      {{ producto.cantidad }} unidades
+                    </span>
+                  </div>
+                  
+                  <!-- Botón agregar -->
+                  <button
+                    (click)="agregarAlCarrito(producto)"
+                    [disabled]="producto.cantidad <= 0"
+                    [class]="producto.cantidad <= 0 ? 
+                      'w-full px-3 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed' : 
+                      'w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'">
+                    <i class="fas fa-plus mr-2"></i>
+                    {{ producto.cantidad <= 0 ? 'Sin Stock' : 'Agregar' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           COLUMNA DERECHA: CARRITO DE VENTA
+           ==================================================================== -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-6">
+          
+          <!-- Header del carrito -->
+          <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <h2 class="text-xl font-semibold text-gray-900">Carrito de Venta</h2>
+              <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                {{ carrito.total_items }} items
+              </span>
+            </div>
+          </div>
+
+          <!-- Contenido del carrito -->
+          <div class="p-6">
+            <div *ngIf="carrito.items.length === 0" class="text-center py-8">
+              <i class="fas fa-shopping-cart text-4xl text-gray-300 mb-4"></i>
+              <p class="text-gray-500">El carrito está vacío</p>
+              <p class="text-sm text-gray-400">Agrega productos para comenzar la venta</p>
+            </div>
+
+            <div *ngIf="carrito.items.length > 0" class="space-y-4">
+              <!-- Items del carrito -->
+              <div *ngFor="let item of carrito.items; trackBy: trackByProductoId" 
+                   class="border border-gray-200 rounded-lg p-4">
+                
+                <!-- Header del item -->
+                <div class="flex justify-between items-start mb-3">
+                  <div class="flex-1">
+                    <h4 class="font-medium text-gray-900 text-sm">{{ item.descripcion }}</h4>
+                    <p class="text-xs text-gray-500">{{ item.codigo }}</p>
+                  </div>
+                  <button
+                    (click)="quitarDelCarrito(item.id_producto)"
+                    class="text-red-400 hover:text-red-600 transition-colors">
+                    <i class="fas fa-trash text-xs"></i>
+                  </button>
+                </div>
+                
+                <!-- Controles de Cantidad y Precio -->
+                <div class="grid grid-cols-2 gap-3">
+                  <!-- Cantidad -->
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
+                    <input
+                      type="number"
+                      [value]="item.cantidad"
+                      (change)="onCantidadChange(item.id_producto, $event)"
+                      min="1"
+                      [max]="item.stock_actual"
+                      class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent">
+                  </div>
+                  
+                  <!-- Precio Unitario (Solo lectura) -->
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
+                    <div class="w-full px-2 py-1 text-sm bg-gray-100 border border-gray-300 rounded text-gray-700">
+                      {{ formatearPrecio(item.precio_unitario) }}
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Descuento -->
+                <div class="mt-3">
+                  <label class="block text-xs font-medium text-gray-700 mb-1">Descuento</label>
+                  <input
+                    type="number"
+                    [value]="item.descuento"
+                    (change)="onDescuentoChange(item.id_producto, $event)"
+                    min="0"
+                    step="0.01"
+                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <!-- Subtotal -->
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium text-gray-700">Subtotal:</span>
+                    <span class="text-sm font-bold text-gray-900">{{ formatearPrecio(item.subtotal) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen del carrito -->
+              <div class="border-t border-gray-200 pt-4 space-y-3">
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Subtotal:</span>
+                  <span class="font-medium">{{ formatearPrecio(carrito.subtotal) }}</span>
+                </div>
+                
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Descuentos:</span>
+                  <span class="font-medium text-red-600">-{{ formatearPrecio(carrito.total_descuentos) }}</span>
+                </div>
+                
+                <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
+                  <span>Total:</span>
+                  <span class="text-green-600">{{ formatearPrecio(carrito.total) }}</span>
+                </div>
+              </div>
+
+              <!-- Botones de acción -->
+              <div class="space-y-3 pt-4">
+                <button
+                  (click)="procesarVenta()"
+                  [disabled]="procesandoVenta || carrito.items.length === 0"
+                  [class]="procesandoVenta || carrito.items.length === 0 ? 
+                    'w-full px-4 py-3 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed' : 
+                    'w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'">
+                  <i *ngIf="!procesandoVenta" class="fas fa-cash-register mr-2"></i>
+                  <i *ngIf="procesandoVenta" class="fas fa-spinner fa-spin mr-2"></i>
+                  {{ procesandoVenta ? 'Procesando...' : 'Procesar Venta' }}
+                </button>
+                
+                <button
+                  (click)="limpiarCarrito()"
+                  [disabled]="carrito.items.length === 0"
+                  [class]="carrito.items.length === 0 ? 
+                    'w-full px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed' : 
+                    'w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors'">
+                  <i class="fas fa-trash mr-2"></i>
+                  Limpiar Carrito
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

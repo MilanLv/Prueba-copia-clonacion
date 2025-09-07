@@ -1,0 +1,234 @@
+<!-- ==================================================================== -->
+<!-- COMPONENTE DE DETALLE DE COTIZACIÓN -->
+<!-- ==================================================================== -->
+<div class="min-h-screen bg-gray-50 p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <button 
+          (click)="volverALista()"
+          class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+          <i class="fas fa-arrow-left text-xl"></i>
+        </button>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Detalle de Cotización</h1>
+          <p class="text-gray-600 mt-1">Información completa de la cotización</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button 
+          (click)="editarCotizacion()"
+          class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center gap-2">
+          <i class="fas fa-edit"></i>
+          Editar
+        </button>
+        <button 
+          (click)="convertirAVenta()"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2">
+          <i class="fas fa-shopping-cart"></i>
+          Convertir a Venta
+        </button>
+        <button 
+          (click)="eliminarCotizacion()"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+          <i class="fas fa-trash"></i>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="cargando" class="flex justify-center items-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <span class="ml-3 text-gray-600">Cargando cotización...</span>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !cargando" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center">
+      <i class="fas fa-exclamation-circle text-red-400 mr-3"></i>
+      <p class="text-red-700">{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div *ngIf="cotizacionCompleta && !cargando" class="space-y-6">
+    
+    <!-- Información General de la Cotización -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Información General</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Código -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+          <p class="text-lg font-semibold text-gray-900">{{ cotizacionCompleta.cotizacion.cod }}</p>
+        </div>
+        
+        <!-- Fecha -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+          <p class="text-gray-900">{{ formatearFecha(cotizacionCompleta.cotizacion.fecha) }}</p>
+        </div>
+        
+        <!-- Estado -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+          <span 
+            [class]="'px-3 py-1 rounded-full text-sm font-medium ' + obtenerColorEstado(obtenerEstadoCotizacion())">
+            {{ obtenerEstadoCotizacion() }}
+          </span>
+        </div>
+        
+        <!-- Vendedor -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Vendedor</label>
+          <p class="text-gray-900">{{ cotizacionCompleta.cotizacion.vendedor || 'N/A' }}</p>
+          <p *ngIf="cotizacionCompleta.cotizacion.vendedor_ci" class="text-sm text-gray-500">
+            CI: {{ cotizacionCompleta.cotizacion.vendedor_ci }}
+          </p>
+        </div>
+        
+        <!-- Total de Items -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Total de Items</label>
+          <p class="text-gray-900">{{ cotizacionCompleta.cotizacion.total_items || 0 }}</p>
+        </div>
+        
+        <!-- Total de Productos -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Total de Productos</label>
+          <p class="text-gray-900">{{ cotizacionCompleta.cotizacion.total_productos || 0 }} unidades</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen Financiero -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Resumen Financiero</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Subtotal -->
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <p class="text-sm font-medium text-gray-600 mb-1">Subtotal</p>
+          <p class="text-2xl font-bold text-gray-900">{{ formatearPrecio(cotizacionCompleta.cotizacion.total) }}</p>
+        </div>
+        
+        <!-- Descuentos -->
+        <div class="text-center p-4 bg-red-50 rounded-lg">
+          <p class="text-sm font-medium text-red-600 mb-1">Descuentos</p>
+          <p class="text-2xl font-bold text-red-600">-{{ formatearPrecio(0) }}</p>
+        </div>
+        
+        <!-- Total -->
+        <div class="text-center p-4 bg-blue-50 rounded-lg">
+          <p class="text-sm font-medium text-blue-600 mb-1">Total</p>
+          <p class="text-3xl font-bold text-blue-600">{{ formatearPrecio(cotizacionCompleta.cotizacion.total) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalles de Productos -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-xl font-semibold text-gray-900">Productos Cotizados</h2>
+        <p class="text-sm text-gray-600 mt-1">{{ cotizacionCompleta.detalles.length }} productos</p>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Producto
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Código
+              </th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cantidad
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Precio Unit.
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Descuento
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Subtotal
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr 
+              *ngFor="let detalle of cotizacionCompleta.detalles" 
+              class="hover:bg-gray-50 transition-colors">
+              
+              <!-- Producto -->
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-box text-gray-400"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ detalle.producto_descripcion }}</p>
+                    <p *ngIf="detalle.codigo_barras" class="text-xs text-gray-500">
+                      Código de barras: {{ detalle.codigo_barras }}
+                    </p>
+                  </div>
+                </div>
+              </td>
+              
+              <!-- Código -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <p class="text-sm text-gray-900">{{ detalle.producto_codigo }}</p>
+              </td>
+              
+              <!-- Cantidad -->
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <span class="text-sm text-gray-900">{{ detalle.cantidad }}</span>
+              </td>
+              
+              <!-- Precio Unitario -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <p class="text-sm text-gray-900">{{ formatearPrecio(detalle.precio_unitario) }}</p>
+              </td>
+              
+              <!-- Descuento -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <p class="text-sm text-gray-900">{{ formatearPrecio(detalle.descuento) }}</p>
+              </td>
+              
+              <!-- Subtotal -->
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <p class="text-sm font-semibold text-gray-900">{{ formatearPrecio(calcularSubtotal(detalle)) }}</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Resumen de Totales -->
+      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div class="flex justify-end">
+          <div class="w-64 space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Subtotal:</span>
+              <span class="font-medium">{{ formatearPrecio(cotizacionCompleta.cotizacion.total) }}</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Descuentos:</span>
+              <span class="font-medium text-red-600">-{{ formatearPrecio(0) }}</span>
+            </div>
+            <div class="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
+              <span>Total:</span>
+              <span class="text-blue-600">{{ formatearPrecio(cotizacionCompleta.cotizacion.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

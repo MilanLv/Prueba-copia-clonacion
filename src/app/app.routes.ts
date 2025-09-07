@@ -104,6 +104,30 @@ export const routes: Routes = [
                        path: 'productos/detalle/:id',
                        loadComponent: () => import('./business/productos/productos-detail/productos-detail.component').then(m => m.ProductosDetailComponent)
                    },
+                   {
+                       path: 'cotizaciones',
+                       loadComponent: () => import('./business/cotizaciones/cotizaciones.component').then(m => m.CotizacionesComponent)
+                   },
+                   {
+                       path: 'cotizaciones/lista',
+                       loadComponent: () => import('./business/cotizaciones/cotizaciones-list/cotizaciones-list.component').then(m => m.CotizacionesListComponent)
+                   },
+                   {
+                       path: 'cotizaciones/detalle/:id',
+                       loadComponent: () => import('./business/cotizaciones/cotizaciones-detail/cotizaciones-detail.component').then(m => m.CotizacionesDetailComponent)
+                   },
+                   {
+                       path: 'ventas',
+                       loadComponent: () => import('./business/ventas/ventas.component').then(m => m.VentasComponent)
+                   },
+                   {
+                       path: 'ventas/lista',
+                       loadComponent: () => import('./business/ventas/ventas-list/ventas-list.component').then(m => m.VentasListComponent)
+                   },
+                   {
+                       path: 'ventas/detalle/:id',
+                       loadComponent: () => import('./business/ventas/ventas-detail/ventas-detail.component').then(m => m.VentasDetailComponent)
+                   },
             {
                 path: '',
                 redirectTo: 'dashboard',
