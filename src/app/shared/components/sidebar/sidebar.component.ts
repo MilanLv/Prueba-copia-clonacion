@@ -13,6 +13,7 @@ import { UserProfile } from '../../models/auth.model';
 })
 export class SidebarComponent implements OnInit {
   currentUser: UserProfile | null = null;
+  isAdmin: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -22,6 +23,7 @@ export class SidebarComponent implements OnInit {
   ngOnInit(): void {
     this.authService.getCurrentUser().subscribe(user => {
       this.currentUser = user;
+      this.isAdmin = this.authService.isAdmin();
     });
   }
 

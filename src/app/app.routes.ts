@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './shared/guards/auth.guard';
+import { AdminGuard } from './shared/guards/admin.guard';
 
 export const routes: Routes = [
     {
@@ -26,67 +27,83 @@ export const routes: Routes = [
             },
             {
                 path: 'usuarios',
-                loadComponent: () => import('./business/usuarios/usuarios-list/usuarios-list.component').then(m => m.UsuariosListComponent)
+                loadComponent: () => import('./business/usuarios/usuarios-list/usuarios-list.component').then(m => m.UsuariosListComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'usuarios/nuevo',
-                loadComponent: () => import('./business/usuarios/usuarios-form/usuarios-form.component').then(m => m.UsuariosFormComponent)
+                loadComponent: () => import('./business/usuarios/usuarios-form/usuarios-form.component').then(m => m.UsuariosFormComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'usuarios/editar/:id',
-                loadComponent: () => import('./business/usuarios/usuarios-form/usuarios-form.component').then(m => m.UsuariosFormComponent)
+                loadComponent: () => import('./business/usuarios/usuarios-form/usuarios-form.component').then(m => m.UsuariosFormComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'usuarios/detalle/:id',
-                loadComponent: () => import('./business/usuarios/usuarios-detail/usuarios-detail.component').then(m => m.UsuariosDetailComponent)
+                loadComponent: () => import('./business/usuarios/usuarios-detail/usuarios-detail.component').then(m => m.UsuariosDetailComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'roles',
-                loadComponent: () => import('./business/roles/roles-list/roles-list.component').then(m => m.RolesListComponent)
+                loadComponent: () => import('./business/roles/roles-list/roles-list.component').then(m => m.RolesListComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'roles/nuevo',
-                loadComponent: () => import('./business/roles/roles-form/roles-form.component').then(m => m.RolesFormComponent)
+                loadComponent: () => import('./business/roles/roles-form/roles-form.component').then(m => m.RolesFormComponent),
+                canActivate: [AdminGuard]
             },
             {
                 path: 'roles/editar/:id',
-                loadComponent: () => import('./business/roles/roles-form/roles-form.component').then(m => m.RolesFormComponent)
+                loadComponent: () => import('./business/roles/roles-form/roles-form.component').then(m => m.RolesFormComponent),
+                canActivate: [AdminGuard]
             },
                    {
                        path: 'roles/detalle/:id',
-                       loadComponent: () => import('./business/roles/roles-detail/roles-detail.component').then(m => m.RolesDetailComponent)
+                       loadComponent: () => import('./business/roles/roles-detail/roles-detail.component').then(m => m.RolesDetailComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'modulos',
-                       loadComponent: () => import('./business/modulos/modulos-list/modulos-list.component').then(m => m.ModulosListComponent)
+                       loadComponent: () => import('./business/modulos/modulos-list/modulos-list.component').then(m => m.ModulosListComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'modulos/nuevo',
-                       loadComponent: () => import('./business/modulos/modulos-form/modulos-form.component').then(m => m.ModulosFormComponent)
+                       loadComponent: () => import('./business/modulos/modulos-form/modulos-form.component').then(m => m.ModulosFormComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'modulos/editar/:id',
-                       loadComponent: () => import('./business/modulos/modulos-form/modulos-form.component').then(m => m.ModulosFormComponent)
+                       loadComponent: () => import('./business/modulos/modulos-form/modulos-form.component').then(m => m.ModulosFormComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'modulos/detalle/:id',
-                       loadComponent: () => import('./business/modulos/modulos-detail/modulos-detail.component').then(m => m.ModulosDetailComponent)
+                       loadComponent: () => import('./business/modulos/modulos-detail/modulos-detail.component').then(m => m.ModulosDetailComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'permisos',
-                       loadComponent: () => import('./business/permisos/permisos-list/permisos-list.component').then(m => m.PermisosListComponent)
+                       loadComponent: () => import('./business/permisos/permisos-list/permisos-list.component').then(m => m.PermisosListComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'permisos/nuevo',
-                       loadComponent: () => import('./business/permisos/permisos-form/permisos-form.component').then(m => m.PermisosFormComponent)
+                       loadComponent: () => import('./business/permisos/permisos-form/permisos-form.component').then(m => m.PermisosFormComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'permisos/editar/:id',
-                       loadComponent: () => import('./business/permisos/permisos-form/permisos-form.component').then(m => m.PermisosFormComponent)
+                       loadComponent: () => import('./business/permisos/permisos-form/permisos-form.component').then(m => m.PermisosFormComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'permisos/detalle/:id',
-                       loadComponent: () => import('./business/permisos/permisos-detail/permisos-detail.component').then(m => m.PermisosDetailComponent)
+                       loadComponent: () => import('./business/permisos/permisos-detail/permisos-detail.component').then(m => m.PermisosDetailComponent),
+                       canActivate: [AdminGuard]
                    },
                    {
                        path: 'productos',
