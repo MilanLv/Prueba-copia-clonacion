@@ -1,10 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { VentasService } from '../../shared/services/ventas.service';
 import { ProductosService } from '../../shared/services/productos.service';
 import { AuthService } from '../../shared/services/auth.service';
+import { BarcodeScannerService, ScanResult } from '../../shared/services/barcode-scanner.service';
+import { BarcodeScannerTestComponent } from '../../shared/components/barcode-scanner-test.component';
 import { 
   CarritoVenta, 
   CarritoItemVenta, 
@@ -16,11 +19,11 @@ import { Producto } from '../../shared/models/producto.model';
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, BarcodeScannerTestComponent],
   templateUrl: './ventas.component.html',
   styleUrls: ['./ventas.component.css']
 })
-export class VentasComponent implements OnInit {
+export class VentasComponent implements OnInit, OnDestroy {
   // ====================================================================
   // PROPIEDADES PARA PRODUCTOS
   // ====================================================================
@@ -50,15 +53,29 @@ export class VentasComponent implements OnInit {
   mensajeExito: string = '';
   mensajeError: string = '';
 
+  // ====================================================================
+  // PROPIEDADES PARA EL ESCÁNER
+  // ====================================================================
+  scannerActivo = false;
+  ultimoCodigoEscaneado = '';
+  private scanSubscription: Subscription = new Subscription();
+
   constructor(
     private ventasService: VentasService,
     private productosService: ProductosService,
     private authService: AuthService,
+    private barcodeScannerService: BarcodeScannerService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarProductos();
+    this.inicializarEscaner();
+  }
+
+  ngOnDestroy(): void {
+    this.scanSubscription.unsubscribe();
+    this.barcodeScannerService.stopListening();
   }
 
   // ====================================================================
@@ -96,6 +113,133 @@ export class VentasComponent implements OnInit {
     if (cantidad <= 0) return 'Sin Stock';
     if (cantidad <= 5) return 'Stock Bajo';
     return 'Stock Normal';
+  }
+
+  // ====================================================================
+  // MÉTODOS DEL ESCÁNER DE CÓDIGOS DE BARRAS
+  // ====================================================================
+
+  inicializarEscaner(): void {
+    // Suscribirse a los códigos escaneados
+    this.scanSubscription = this.barcodeScannerService.onScan$.subscribe(
+      (scanResult: ScanResult) => {
+        this.procesarCodigoEscaneado(scanResult.code);
+      }
+    );
+
+    // Suscribirse al estado del escáner
+    this.barcodeScannerService.isListening$.subscribe(
+      (isListening: boolean) => {
+        this.scannerActivo = isListening;
+      }
+    );
+  }
+
+  activarEscaner(): void {
+    this.barcodeScannerService.startListening();
+    console.log('Escáner de códigos de barras activado para ventas');
+  }
+
+  desactivarEscaner(): void {
+    this.barcodeScannerService.stopListening();
+    console.log('Escáner de códigos de barras desactivado para ventas');
+  }
+
+  toggleEscaner(): void {
+    if (this.scannerActivo) {
+      this.desactivarEscaner();
+    } else {
+      this.activarEscaner();
+    }
+  }
+
+  procesarCodigoEscaneado(codigo: string): void {
+    if (!codigo || codigo.trim() === '') return;
+
+    this.ultimoCodigoEscaneado = codigo;
+    console.log('Código escaneado en ventas:', codigo);
+
+    // Buscar el producto por código de barras
+    this.buscarProductoPorCodigoVenta(codigo);
+  }
+
+  buscarProductoPorCodigoVenta(codigo: string): void {
+    this.productosService.findByCode(codigo).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const producto: Producto = response.data;
+          console.log('Producto encontrado para venta:', producto);
+          
+          // Convertir a ProductoVenta y agregar automáticamente al carrito
+          const productoVenta: ProductoVenta = {
+            id: producto.id,
+            cod: producto.cod,
+            codigo_barras: producto.codigo_barras,
+            descripcion: producto.descripcion,
+            precio: producto.precio,
+            cantidad: producto.cantidad,
+            imagen: producto.imagen,
+            estado_stock: this.obtenerEstadoStock(producto.cantidad)
+          };
+          
+          this.agregarAlCarrito(productoVenta);
+          this.mostrarNotificacionProductoAgregadoVenta(productoVenta);
+        } else {
+          console.warn('No se encontró producto con código para venta:', codigo);
+          this.mostrarNotificacionProductoNoEncontradoVenta(codigo);
+        }
+      },
+      error: (error) => {
+        console.error('Error al buscar producto por código en ventas:', error);
+        this.mostrarNotificacionErrorVenta(codigo);
+      }
+    });
+  }
+
+  mostrarNotificacionProductoAgregadoVenta(producto: ProductoVenta): void {
+    console.log(`✅ Producto agregado a venta: ${producto.descripcion}`);
+    this.mensajeExito = `Producto agregado: ${producto.descripcion}`;
+    
+    // Limpiar mensaje después de 3 segundos
+    setTimeout(() => {
+      this.mensajeExito = '';
+    }, 3000);
+    
+    // Opcional: Agregar clase CSS temporal para resaltar el producto agregado
+    setTimeout(() => {
+      const productoEnCarrito = document.querySelector(`[data-producto-venta-id="${producto.id}"]`);
+      if (productoEnCarrito) {
+        productoEnCarrito.classList.add('producto-recien-agregado');
+        setTimeout(() => {
+          productoEnCarrito.classList.remove('producto-recien-agregado');
+        }, 2000);
+      }
+    }, 100);
+  }
+
+  mostrarNotificacionProductoNoEncontradoVenta(codigo: string): void {
+    console.warn(`❌ No se encontró producto con código para venta: ${codigo}`);
+    this.mensajeError = `No se encontró producto con código: ${codigo}`;
+    setTimeout(() => {
+      this.mensajeError = '';
+    }, 3000);
+  }
+
+  mostrarNotificacionErrorVenta(codigo: string): void {
+    console.error(`❌ Error al buscar producto con código para venta: ${codigo}`);
+    this.mensajeError = `Error al buscar producto con código: ${codigo}`;
+    setTimeout(() => {
+      this.mensajeError = '';
+    }, 3000);
+  }
+
+  // Método para testing - simular escaneo manual en ventas
+  simularEscaneoVenta(codigo: string): void {
+    if (this.scannerActivo) {
+      this.barcodeScannerService.simulateScan(codigo);
+    } else {
+      console.warn('El escáner no está activo para ventas');
+    }
   }
 
   // ====================================================================

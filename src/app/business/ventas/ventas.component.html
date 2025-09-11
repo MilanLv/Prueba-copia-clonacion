@@ -48,7 +48,42 @@
           
           <!-- Header de productos -->
           <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Productos Disponibles</h2>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-gray-900">Productos Disponibles</h2>
+              
+              <!-- Escáner de Códigos de Barras -->
+              <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                  <button
+                    (click)="toggleEscaner()"
+                    [class]="scannerActivo ? 
+                      'px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2' : 
+                      'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2'"
+                    title="Activar/Desactivar escáner de códigos de barras">
+                    <i [class]="scannerActivo ? 'fas fa-stop' : 'fas fa-barcode'"></i>
+                    {{ scannerActivo ? 'Detener Escáner' : 'Activar Escáner' }}
+                  </button>
+                  
+                  <!-- Indicador de estado del escáner -->
+                  <div 
+                    *ngIf="scannerActivo" 
+                    class="flex items-center gap-1 text-green-600 text-sm">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Escaneando...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Información del último código escaneado -->
+            <div 
+              *ngIf="ultimoCodigoEscaneado && scannerActivo" 
+              class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg scanner-notification">
+              <div class="flex items-center gap-2 text-blue-800">
+                <i class="fas fa-barcode"></i>
+                <span class="text-sm">Último código escaneado: <strong>{{ ultimoCodigoEscaneado }}</strong></span>
+              </div>
+            </div>
             
             <!-- Filtros y búsqueda -->
             <div class="space-y-4">
@@ -125,7 +160,8 @@
 
             <div *ngIf="!cargandoProductos && productosFiltrados.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div *ngFor="let producto of productosFiltrados" 
-                   class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                   [attr.data-producto-venta-id]="producto.id"
+                   class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow producto-card">
                 
                 <!-- Imagen del producto -->
                 <div class="aspect-square bg-gray-100 rounded-lg mb-3 overflow-hidden">
@@ -298,6 +334,11 @@
               </div>
             </div>
           </div>
+          
+          <!-- Componente de prueba del escáner -->
+          <!-- <div class="mt-6">
+            <app-barcode-scanner-test></app-barcode-scanner-test>
+          </div> -->
         </div>
       </div>
     </div>

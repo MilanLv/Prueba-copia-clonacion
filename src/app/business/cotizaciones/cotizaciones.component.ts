@@ -1,24 +1,24 @@
-// ====================================================================
-// COMPONENTE PRINCIPAL DE COTIZACIONES
-// ====================================================================
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ProductosService } from '../../shared/services/productos.service';
 import { CotizacionesService } from '../../shared/services/cotizaciones.service';
 import { AuthService } from '../../shared/services/auth.service';
+import { BarcodeScannerService, ScanResult } from '../../shared/services/barcode-scanner.service';
+import { BarcodeScannerTestComponent } from '../../shared/components/barcode-scanner-test.component';
 import { Producto } from '../../shared/models/producto.model';
 import { CarritoItem, CarritoCotizacion } from '../../shared/models/cotizacion.model';
 
 @Component({
   selector: 'app-cotizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BarcodeScannerTestComponent],
   templateUrl: './cotizaciones.component.html',
   styleUrl: './cotizaciones.component.css'
 })
-export class CotizacionesComponent implements OnInit {
+export class CotizacionesComponent implements OnInit, OnDestroy {
   // ====================================================================
   // PROPIEDADES
   // ====================================================================
@@ -50,16 +50,28 @@ export class CotizacionesComponent implements OnInit {
   // Usuario actual
   usuarioActual: any = null;
 
+  // Escáner de códigos de barras
+  scannerActivo = false;
+  ultimoCodigoEscaneado = '';
+  private scanSubscription: Subscription = new Subscription();
+
   constructor(
     private productosService: ProductosService,
     private cotizacionesService: CotizacionesService,
     private authService: AuthService,
+    private barcodeScannerService: BarcodeScannerService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarUsuarioActual();
     this.cargarProductos();
+    this.inicializarEscaner();
+  }
+
+  ngOnDestroy(): void {
+    this.scanSubscription.unsubscribe();
+    this.barcodeScannerService.stopListening();
   }
 
   // ====================================================================
@@ -87,6 +99,113 @@ export class CotizacionesComponent implements OnInit {
         this.productosCargando = false;
       }
     });
+  }
+
+  // ====================================================================
+  // MÉTODOS DEL ESCÁNER DE CÓDIGOS DE BARRAS
+  // ====================================================================
+
+  inicializarEscaner(): void {
+    // Suscribirse a los códigos escaneados
+    this.scanSubscription = this.barcodeScannerService.onScan$.subscribe(
+      (scanResult: ScanResult) => {
+        this.procesarCodigoEscaneado(scanResult.code);
+      }
+    );
+
+    // Suscribirse al estado del escáner
+    this.barcodeScannerService.isListening$.subscribe(
+      (isListening: boolean) => {
+        this.scannerActivo = isListening;
+      }
+    );
+  }
+
+  activarEscaner(): void {
+    this.barcodeScannerService.startListening();
+    console.log('Escáner de códigos de barras activado');
+  }
+
+  desactivarEscaner(): void {
+    this.barcodeScannerService.stopListening();
+    console.log('Escáner de códigos de barras desactivado');
+  }
+
+  toggleEscaner(): void {
+    if (this.scannerActivo) {
+      this.desactivarEscaner();
+    } else {
+      this.activarEscaner();
+    }
+  }
+
+  procesarCodigoEscaneado(codigo: string): void {
+    if (!codigo || codigo.trim() === '') return;
+
+    this.ultimoCodigoEscaneado = codigo;
+    console.log('Código escaneado:', codigo);
+
+    // Buscar el producto por código de barras
+    this.buscarProductoPorCodigo(codigo);
+  }
+
+  buscarProductoPorCodigo(codigo: string): void {
+    this.productosService.findByCode(codigo).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const producto: Producto = response.data;
+          console.log('Producto encontrado:', producto);
+          
+          // Agregar automáticamente al carrito
+          this.agregarAlCarrito(producto);
+          
+          // Mostrar notificación visual (opcional)
+          this.mostrarNotificacionProductoAgregado(producto);
+        } else {
+          console.warn('No se encontró producto con código:', codigo);
+          this.mostrarNotificacionProductoNoEncontrado(codigo);
+        }
+      },
+      error: (error) => {
+        console.error('Error al buscar producto por código:', error);
+        this.mostrarNotificacionError(codigo);
+      }
+    });
+  }
+
+  mostrarNotificacionProductoAgregado(producto: Producto): void {
+    // Aquí puedes implementar una notificación toast o similar
+    console.log(`✅ Producto agregado: ${producto.descripcion}`);
+    
+    // Opcional: Agregar clase CSS temporal para resaltar el producto agregado
+    setTimeout(() => {
+      const productoEnCarrito = document.querySelector(`[data-producto-id="${producto.id}"]`);
+      if (productoEnCarrito) {
+        productoEnCarrito.classList.add('producto-recien-agregado');
+        setTimeout(() => {
+          productoEnCarrito.classList.remove('producto-recien-agregado');
+        }, 2000);
+      }
+    }, 100);
+  }
+
+  mostrarNotificacionProductoNoEncontrado(codigo: string): void {
+    console.warn(`❌ No se encontró producto con código: ${codigo}`);
+    // Aquí puedes implementar una notificación de error
+  }
+
+  mostrarNotificacionError(codigo: string): void {
+    console.error(`❌ Error al buscar producto con código: ${codigo}`);
+    // Aquí puedes implementar una notificación de error
+  }
+
+  // Método para testing - simular escaneo manual
+  simularEscaneo(codigo: string): void {
+    if (this.scannerActivo) {
+      this.barcodeScannerService.simulateScan(codigo);
+    } else {
+      console.warn('El escáner no está activo');
+    }
   }
 
   // ====================================================================

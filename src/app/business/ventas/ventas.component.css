@@ -1,2 +1,72 @@
-/* Estilos para el componente de ventas */
-/* Se usa principalmente Tailwind CSS, este archivo está vacío por preferencia del usuario */
+/* ==================================================================== */
+/* ESTILOS PARA EL COMPONENTE DE VENTAS */
+/* ==================================================================== */
+
+/* Estilo para las cards de productos */
+.producto-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.producto-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ==================================================================== */
+/* ESTILOS PARA EL ESCÁNER DE CÓDIGOS DE BARRAS */
+/* ==================================================================== */
+
+/* Animación para producto recién agregado */
+.producto-recien-agregado {
+  animation: producto-agregado 2s ease-in-out;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+@keyframes producto-agregado {
+  0% {
+    background-color: #ecfdf5;
+    transform: scale(1);
+  }
+  25% {
+    background-color: #d1fae5;
+    transform: scale(1.02);
+  }
+  50% {
+    background-color: #a7f3d0;
+    transform: scale(1.02);
+  }
+  75% {
+    background-color: #d1fae5;
+    transform: scale(1);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Estilo para notificaciones del escáner */
+.scanner-notification {
+  animation: slide-in-down 0.3s ease-out;
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utilidad para truncar texto */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

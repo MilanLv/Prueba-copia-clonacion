@@ -46,6 +46,70 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* ==================================================================== */
+/* ESTILOS PARA EL ESCÁNER DE CÓDIGOS DE BARRAS */
+/* ==================================================================== */
+
+/* Animación para producto recién agregado */
+.producto-recien-agregado {
+  animation: producto-agregado 2s ease-in-out;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+}
+
+@keyframes producto-agregado {
+  0% {
+    background-color: #ecfdf5;
+    transform: scale(1);
+  }
+  25% {
+    background-color: #d1fae5;
+    transform: scale(1.02);
+  }
+  50% {
+    background-color: #a7f3d0;
+    transform: scale(1.02);
+  }
+  75% {
+    background-color: #d1fae5;
+    transform: scale(1);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+/* Estilo para el indicador de escáner activo */
+.scanner-indicator {
+  animation: pulse-scanner 2s infinite;
+}
+
+@keyframes pulse-scanner {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Estilo para notificaciones del escáner */
+.scanner-notification {
+  animation: slide-in-down 0.3s ease-out;
+}
+
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Estilo para el estado de stock */
 .stock-badge {
   font-size: 0.75rem;
