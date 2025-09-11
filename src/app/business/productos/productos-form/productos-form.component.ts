@@ -1,9 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ZXingScannerModule } from '@zxing/ngx-scanner';
-import { BarcodeFormat } from '@zxing/library';
 import { ProductosService } from '../../../shared/services/productos.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { Producto, ProductoCreate, ProductoUpdate } from '../../../shared/models/producto.model';
@@ -11,11 +9,13 @@ import { Producto, ProductoCreate, ProductoUpdate } from '../../../shared/models
 @Component({
   selector: 'app-productos-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ZXingScannerModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './productos-form.component.html',
   styleUrl: './productos-form.component.css'
 })
 export class ProductosFormComponent implements OnInit {
+  @ViewChild('barcodeInput', { static: false }) barcodeInput!: ElementRef<HTMLInputElement>;
+  
   productoForm: FormGroup;
   producto: Producto | null = null;
   loading = false;
@@ -23,16 +23,11 @@ export class ProductosFormComponent implements OnInit {
   isEdit = false;
   selectedFile: File | null = null;
   imagePreview: string | null = null;
-  showScanner = false;
+  showScannerInstructions = false;
   scannedCode = '';
-  allowedFormats = [
-    BarcodeFormat.EAN_13,
-    BarcodeFormat.EAN_8,
-    BarcodeFormat.CODE_128,
-    BarcodeFormat.CODE_39,
-    BarcodeFormat.UPC_A,
-    BarcodeFormat.UPC_E
-  ];
+  scannerReady = false;
+  private scanBuffer = '';
+  private scanTimeout: any;
 
   constructor(
     private fb: FormBuilder,
@@ -127,19 +122,70 @@ export class ProductosFormComponent implements OnInit {
     this.productoForm.patchValue({ imagen: '' });
   }
 
-  toggleScanner(): void {
-    this.showScanner = !this.showScanner;
+  toggleScannerInstructions(): void {
+    this.showScannerInstructions = !this.showScannerInstructions;
   }
 
-  onScanSuccess(result: string): void {
-    this.scannedCode = result;
-    this.productoForm.patchValue({ codigo_barras: result });
-    this.showScanner = false;
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Solo procesar si el escáner está listo y estamos en el campo de código de barras
+    if (!this.scannerReady || !this.barcodeInput?.nativeElement.contains(document.activeElement)) {
+      return;
+    }
+
+    // Ignorar teclas especiales como Enter, Tab, etc.
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.processScannedCode();
+      return;
+    }
+
+    // Acumular caracteres en el buffer
+    if (event.key.length === 1) {
+      this.scanBuffer += event.key;
+      
+      // Limpiar timeout anterior
+      if (this.scanTimeout) {
+        clearTimeout(this.scanTimeout);
+      }
+      
+      // Establecer nuevo timeout para procesar el código completo
+      this.scanTimeout = setTimeout(() => {
+        this.processScannedCode();
+      }, 100);
+    }
   }
 
-  onScanError(error: any): void {
-    console.error('Error al escanear:', error);
-    this.error = 'Error al escanear código de barras';
+  private processScannedCode(): void {
+    if (this.scanBuffer.length > 0) {
+      this.scannedCode = this.scanBuffer;
+      this.productoForm.patchValue({ codigo_barras: this.scanBuffer });
+      this.scanBuffer = '';
+      this.scannerReady = false;
+      this.showScannerInstructions = false;
+      
+      // Validar el código escaneado
+      this.validateBarcode();
+    }
+  }
+
+  enableScanner(): void {
+    this.scannerReady = true;
+    this.showScannerInstructions = true;
+    this.scanBuffer = '';
+    
+    // Enfocar el campo de código de barras
+    setTimeout(() => {
+      if (this.barcodeInput) {
+        this.barcodeInput.nativeElement.focus();
+      }
+    }, 100);
+  }
+
+  disableScanner(): void {
+    this.scannerReady = false;
+    this.showScannerInstructions = false;
+    this.scanBuffer = '';
   }
 
   generateBarcode(): void {

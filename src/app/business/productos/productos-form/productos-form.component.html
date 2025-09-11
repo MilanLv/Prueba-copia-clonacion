@@ -118,52 +118,93 @@
             </label>
             <div class="flex space-x-2">
               <input 
+                #barcodeInput
                 type="text" 
                 formControlName="codigo_barras"
                 placeholder="Código de barras del producto"
                 (blur)="validateBarcode()"
+                (focus)="disableScanner()"
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <button 
                 type="button"
-                (click)="toggleScanner()"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                <i class="fas fa-qrcode"></i>
-                <span>Escanear</span>
+                (click)="enableScanner()"
+                [class]="scannerReady ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
+                class="text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <i class="fas fa-barcode"></i>
+                <span>{{ scannerReady ? 'Escaneando...' : 'Escanear' }}</span>
               </button>
               <button 
                 *ngIf="isEdit"
                 type="button"
                 (click)="generateBarcode()"
                 class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                <i class="fas fa-barcode"></i>
+                <i class="fas fa-magic"></i>
                 <span>Generar</span>
               </button>
             </div>
           </div>
 
-          <!-- Scanner de códigos de barras -->
-          <div *ngIf="showScanner" class="bg-gray-100 p-4 rounded-lg">
+          <!-- Instrucciones del Escáner ZKTeco -->
+          <div *ngIf="showScannerInstructions" class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
             <div class="flex justify-between items-center mb-4">
-              <h4 class="text-md font-medium text-gray-900">Escanear Código de Barras</h4>
+              <h4 class="text-md font-medium text-blue-900 flex items-center">
+                <i class="fas fa-barcode mr-2"></i>
+                Escáner ZKTeco 1D - Listo para Escanear
+              </h4>
               <button 
                 type="button"
-                (click)="toggleScanner()"
-                class="text-gray-500 hover:text-gray-700">
+                (click)="disableScanner()"
+                class="text-blue-500 hover:text-blue-700">
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <!-- Scanner real con ngx-scanner -->
-            <div class="bg-white p-4 rounded border">
-              <zxing-scanner
-                [enable]="showScanner"
-                [formats]="allowedFormats"
-                (scanSuccess)="onScanSuccess($event)"
-                (scanError)="onScanError($event)"
-                class="w-full h-64 rounded">
-              </zxing-scanner>
-              <p class="text-center text-sm text-gray-500 mt-2">
-                Apunta la cámara hacia el código de barras
-              </p>
+            
+            <div class="space-y-3">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                <p class="text-blue-800 text-sm">
+                  <strong>Conecta el escáner ZKTeco</strong> al puerto USB de tu computadora
+                </p>
+              </div>
+              
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                <p class="text-blue-800 text-sm">
+                  <strong>Haz clic en "Escanear"</strong> para activar el modo de escaneo
+                </p>
+              </div>
+              
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                <p class="text-blue-800 text-sm">
+                  <strong>Apunta el escáner</strong> al código de barras del producto
+                </p>
+              </div>
+              
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">4</div>
+                <p class="text-blue-800 text-sm">
+                  <strong>El código se capturará automáticamente</strong> en el campo de código de barras
+                </p>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <div class="flex items-center">
+                <i class="fas fa-lightbulb text-yellow-600 mr-2"></i>
+                <p class="text-yellow-800 text-sm font-medium">
+                  <strong>Tip:</strong> El escáner ZKTeco funciona como un teclado. Asegúrate de que el campo de código de barras esté enfocado.
+                </p>
+              </div>
+            </div>
+            
+            <div class="mt-4 flex items-center justify-center">
+              <div class="animate-pulse flex items-center space-x-2 text-blue-600">
+                <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span class="ml-2 text-sm font-medium">Esperando escaneo...</span>
+              </div>
             </div>
           </div>
 
