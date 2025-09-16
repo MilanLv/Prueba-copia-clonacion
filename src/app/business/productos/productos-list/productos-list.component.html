@@ -21,53 +21,6 @@
     </div>
   </div>
 
-  <!-- Estadísticas -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" *ngIf="stats">
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex items-center">
-        <div class="p-2 bg-blue-100 rounded-lg">
-          <i class="fas fa-box text-blue-600"></i>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-gray-600">Total Productos</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.total_productos }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex items-center">
-        <div class="p-2 bg-green-100 rounded-lg">
-          <i class="fas fa-check-circle text-green-600"></i>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-gray-600">Con Stock</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.con_stock }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex items-center">
-        <div class="p-2 bg-red-100 rounded-lg">
-          <i class="fas fa-exclamation-triangle text-red-600"></i>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-gray-600">Stock Bajo</p>
-          <p class="text-2xl font-bold text-gray-900">{{ stats.stock_bajo }}</p>
-        </div>
-      </div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow">
-      <div class="flex items-center">
-        <div class="p-2 bg-purple-100 rounded-lg">
-          <i class="fas fa-dollar-sign text-purple-600"></i>
-        </div>
-        <div class="ml-3">
-          <p class="text-sm text-gray-600">Valor Inventario</p>
-          <p class="text-2xl font-bold text-gray-900">${{ stats.valor_inventario | number:'1.2-2' }}</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Filtros y búsqueda -->
   <div class="bg-white p-4 rounded-lg shadow mb-6">
