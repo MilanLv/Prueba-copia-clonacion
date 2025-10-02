@@ -14,6 +14,7 @@ export interface Producto {
   total_ventas: number;
   total_cotizaciones: number;
   encontrado_por?: string;
+  selected?: boolean;
 }
 
 export interface ProductoCreate {

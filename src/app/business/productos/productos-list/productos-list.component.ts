@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProductosService } from '../../../shared/services/productos.service';
 import { AuthService } from '../../../shared/services/auth.service';
+import { PdfService } from '../../../shared/services/pdf.service';
 import { Producto } from '../../../shared/models/producto.model';
 
 @Component({
@@ -21,6 +22,8 @@ export class ProductosListComponent implements OnInit {
   selectedStockFilter = '';
   showWithoutBarcode = false;
   stats: any = null;
+  selectAll = false;
+  selectedProducts: Producto[] = [];
 
   // Filtros disponibles
   stockFilters = [
@@ -34,6 +37,7 @@ export class ProductosListComponent implements OnInit {
   constructor(
     private productosService: ProductosService,
     private authService: AuthService,
+    private pdfService: PdfService,
     private router: Router
   ) {}
 
@@ -295,5 +299,38 @@ export class ProductosListComponent implements OnInit {
 
   goToDetailProducto(producto: Producto): void {
     this.router.navigate(['/productos/detalle', producto.id]);
+  }
+
+  // Métodos para selección múltiple
+  toggleSelectAll(): void {
+    this.filteredProductos.forEach(producto => {
+      producto.selected = this.selectAll;
+    });
+    this.updateSelectedProducts();
+  }
+
+  onProductSelectChange(): void {
+    this.updateSelectedProducts();
+    this.updateSelectAllState();
+  }
+
+  updateSelectedProducts(): void {
+    this.selectedProducts = this.filteredProductos.filter(producto => producto.selected);
+  }
+
+  updateSelectAllState(): void {
+    const totalProducts = this.filteredProductos.length;
+    const selectedCount = this.selectedProducts.length;
+    this.selectAll = totalProducts > 0 && selectedCount === totalProducts;
+  }
+
+  // Método para generar PDF
+  generatePDF(): void {
+    if (this.selectedProducts.length === 0) {
+      alert('Por favor selecciona al menos un producto para generar el PDF');
+      return;
+    }
+
+    this.pdfService.generateProductReport(this.selectedProducts);
   }
 }
