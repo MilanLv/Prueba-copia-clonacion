@@ -7,7 +7,7 @@ import { VentasService } from '../../shared/services/ventas.service';
 import { ProductosService } from '../../shared/services/productos.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { BarcodeScannerService, ScanResult } from '../../shared/services/barcode-scanner.service';
-import { BarcodeScannerTestComponent } from '../../shared/components/barcode-scanner-test.component';
+import { CartItemModalComponent, CartItemData } from '../../shared/components/cart-item-modal/cart-item-modal.component';
 import { 
   CarritoVenta, 
   CarritoItemVenta, 
@@ -19,7 +19,7 @@ import { Producto } from '../../shared/models/producto.model';
 @Component({
   selector: 'app-ventas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, BarcodeScannerTestComponent],
+  imports: [CommonModule, FormsModule, RouterModule, CartItemModalComponent],
   templateUrl: './ventas.component.html',
   styleUrls: ['./ventas.component.css']
 })
@@ -52,6 +52,12 @@ export class VentasComponent implements OnInit, OnDestroy {
   procesandoVenta: boolean = false;
   mensajeExito: string = '';
   mensajeError: string = '';
+
+  // ====================================================================
+  // PROPIEDADES PARA EL MODAL
+  // ====================================================================
+  showCartModal = false;
+  selectedCartItem: CartItemData | null = null;
 
   // ====================================================================
   // PROPIEDADES PARA EL ESCÁNER
@@ -506,5 +512,69 @@ export class VentasComponent implements OnInit, OnDestroy {
 
   verListaVentas(): void {
     this.router.navigate(['/ventas/lista']);
+  }
+
+  // ====================================================================
+  // MÉTODOS PARA EL MODAL DE EDICIÓN DE CARRITO
+  // ====================================================================
+
+  /**
+   * Abre el modal para editar un item del carrito
+   */
+  openCartItemModal(item: CarritoItemVenta): void {
+    this.selectedCartItem = {
+      id_producto: item.id_producto,
+      cod: item.codigo,
+      descripcion: item.descripcion,
+      precio_unitario: item.precio_unitario,
+      cantidad: item.cantidad,
+      descuento: item.descuento,
+      stock_actual: item.stock_actual,
+      imagen: item.imagen
+    };
+    this.showCartModal = true;
+  }
+
+  /**
+   * Maneja el doble click en un item del carrito
+   */
+  onCartItemDoubleClick(item: CarritoItemVenta): void {
+    this.openCartItemModal(item);
+  }
+
+  /**
+   * Guarda los cambios del item editado
+   */
+  onSaveCartItem(updatedItem: CartItemData): void {
+    const carritoItem = this.carrito.items.find(item => item.id_producto === updatedItem.id_producto);
+    if (carritoItem) {
+      carritoItem.cantidad = updatedItem.cantidad;
+      carritoItem.descuento = updatedItem.descuento;
+      carritoItem.subtotal = (updatedItem.cantidad * updatedItem.precio_unitario) - updatedItem.descuento;
+      this.actualizarCarrito();
+    }
+  }
+
+  /**
+   * Elimina un item del carrito desde el modal
+   */
+  onDeleteCartItem(idProducto: number): void {
+    this.quitarDelCarrito(idProducto);
+  }
+
+  /**
+   * Convierte CarritoItemVenta a CartItemData
+   */
+  private convertToCartItemData(item: CarritoItemVenta): CartItemData {
+    return {
+      id_producto: item.id_producto,
+      cod: item.codigo,
+      descripcion: item.descripcion,
+      precio_unitario: item.precio_unitario,
+      cantidad: item.cantidad,
+      descuento: item.descuento,
+      stock_actual: item.stock_actual,
+      imagen: item.imagen
+    };
   }
 }

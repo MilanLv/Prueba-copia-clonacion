@@ -200,68 +200,43 @@
         <!-- Contenido del Carrito -->
         <div *ngIf="carritoAbierto" class="p-6">
           
-          <!-- Items del Carrito -->
-          <div *ngIf="carrito.items.length > 0" class="space-y-4 mb-6">
+          <!-- Items del Carrito - Versión simplificada -->
+          <div *ngIf="carrito.items.length > 0" class="space-y-3 mb-6">
             <div 
               *ngFor="let item of carrito.items; trackBy: trackByProductoId" 
-              class="border border-gray-200 rounded-lg p-4">
+              (dblclick)="onCartItemDoubleClick(item)"
+              class="border border-gray-200 rounded-lg p-3 cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all duration-200 group">
               
-              <!-- Información del Producto -->
-              <div class="flex items-start gap-3 mb-3">
-                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-box text-gray-400"></i>
-                </div>
+              <!-- Información básica del producto -->
+              <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                  <h4 class="font-medium text-gray-900 text-sm line-clamp-2">{{ item.descripcion }}</h4>
+                  <h4 class="font-medium text-gray-900 text-sm truncate">{{ item.descripcion }}</h4>
                   <p class="text-xs text-gray-500">{{ item.cod }}</p>
                 </div>
+                
+                <!-- Cantidad y total -->
+                <div class="text-right">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-500">{{ item.cantidad }}x</span>
+                    <span class="text-sm font-bold text-gray-900">{{ formatearPrecio(item.precio_unitario) }}</span>
+                  </div>
+                  <div class="text-sm font-bold text-blue-600">
+                    {{ formatearPrecio(item.cantidad * item.precio_unitario - item.descuento) }}
+                  </div>
+                </div>
+                
+                <!-- Botón eliminar -->
                 <button
-                  (click)="quitarDelCarrito(item.id_producto)"
-                  class="text-red-400 hover:text-red-600 transition-colors">
+                  (click)="quitarDelCarrito(item.id_producto); $event.stopPropagation()"
+                  class="ml-2 text-red-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">
                   <i class="fas fa-trash text-xs"></i>
                 </button>
               </div>
               
-              <!-- Controles de Cantidad y Precio -->
-              <div class="grid grid-cols-2 gap-3">
-                <!-- Cantidad -->
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Cantidad</label>
-                  <input
-                    type="number"
-                    [value]="item.cantidad"
-                    (change)="onCantidadChange(item.id_producto, $event)"
-                    min="1"
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <!-- Precio Unitario (Solo lectura) -->
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 mb-1">Precio Unit.</label>
-                  <div class="w-full px-2 py-1 text-sm bg-gray-100 border border-gray-300 rounded text-gray-700">
-                    {{ formatearPrecio(item.precio_unitario) }}
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Descuento -->
-              <div class="mt-3">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Descuento</label>
-                  <input
-                    type="number"
-                    [value]="item.descuento"
-                    (change)="onDescuentoChange(item.id_producto, $event)"
-                    min="0"
-                    step="0.01"
-                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent">
-              </div>
-              
-              <!-- Subtotal -->
-              <div class="mt-3 pt-3 border-t border-gray-200">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Subtotal:</span>
-                  <span class="font-semibold text-gray-900">{{ formatearPrecio(item.cantidad * item.precio_unitario - item.descuento) }}</span>
-                </div>
+              <!-- Indicador de doble click -->
+              <div class="mt-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fas fa-mouse-pointer mr-1"></i>
+                Doble click para editar
               </div>
             </div>
           </div>
@@ -319,4 +294,12 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal para editar items del carrito -->
+  <app-cart-item-modal 
+    [(isOpen)]="showCartModal"
+    [item]="selectedCartItem"
+    (saveChanges)="onSaveCartItem($event)"
+    (deleteItem)="onDeleteCartItem($event)">
+  </app-cart-item-modal>
 </div>

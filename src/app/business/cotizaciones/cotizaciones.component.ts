@@ -7,14 +7,14 @@ import { ProductosService } from '../../shared/services/productos.service';
 import { CotizacionesService } from '../../shared/services/cotizaciones.service';
 import { AuthService } from '../../shared/services/auth.service';
 import { BarcodeScannerService, ScanResult } from '../../shared/services/barcode-scanner.service';
-import { BarcodeScannerTestComponent } from '../../shared/components/barcode-scanner-test.component';
+import { CartItemModalComponent, CartItemData } from '../../shared/components/cart-item-modal/cart-item-modal.component';
 import { Producto } from '../../shared/models/producto.model';
 import { CarritoItem, CarritoCotizacion } from '../../shared/models/cotizacion.model';
 
 @Component({
   selector: 'app-cotizaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, BarcodeScannerTestComponent],
+  imports: [CommonModule, FormsModule, CartItemModalComponent],
   templateUrl: './cotizaciones.component.html',
   styleUrl: './cotizaciones.component.css'
 })
@@ -49,6 +49,12 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   
   // Usuario actual
   usuarioActual: any = null;
+
+  // ====================================================================
+  // PROPIEDADES PARA EL MODAL
+  // ====================================================================
+  showCartModal = false;
+  selectedCartItem: CartItemData | null = null;
 
   // Escáner de códigos de barras
   scannerActivo = false;
@@ -413,5 +419,53 @@ export class CotizacionesComponent implements OnInit, OnDestroy {
   onDescuentoChange(idProducto: number, event: Event): void {
     const target = event.target as HTMLInputElement;
     this.actualizarDescuento(idProducto, +target.value);
+  }
+
+  // ====================================================================
+  // MÉTODOS PARA EL MODAL DE EDICIÓN DE CARRITO
+  // ====================================================================
+
+  /**
+   * Abre el modal para editar un item del carrito
+   */
+  openCartItemModal(item: CarritoItem): void {
+    this.selectedCartItem = {
+      id_producto: item.id_producto,
+      cod: item.cod,
+      descripcion: item.descripcion,
+      precio_unitario: item.precio_unitario,
+      cantidad: item.cantidad,
+      descuento: item.descuento,
+      stock_actual: item.stock_actual,
+      imagen: item.imagen
+    };
+    this.showCartModal = true;
+  }
+
+  /**
+   * Maneja el doble click en un item del carrito
+   */
+  onCartItemDoubleClick(item: CarritoItem): void {
+    this.openCartItemModal(item);
+  }
+
+  /**
+   * Guarda los cambios del item editado
+   */
+  onSaveCartItem(updatedItem: CartItemData): void {
+    const carritoItem = this.carrito.items.find(item => item.id_producto === updatedItem.id_producto);
+    if (carritoItem) {
+      carritoItem.cantidad = updatedItem.cantidad;
+      carritoItem.descuento = updatedItem.descuento;
+      carritoItem.subtotal = (updatedItem.cantidad * updatedItem.precio_unitario) - updatedItem.descuento;
+      this.actualizarCarrito();
+    }
+  }
+
+  /**
+   * Elimina un item del carrito desde el modal
+   */
+  onDeleteCartItem(idProducto: number): void {
+    this.quitarDelCarrito(idProducto);
   }
 }
