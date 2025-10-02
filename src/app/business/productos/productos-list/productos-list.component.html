@@ -6,25 +6,51 @@
       <p class="text-gray-600 mt-1">Administra el inventario de productos</p>
     </div>
     <div class="flex space-x-3">
-      <button 
-        (click)="generatePDF()"
-        [disabled]="selectedProducts.length === 0"
-        class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-        <i class="fas fa-file-pdf"></i>
-        <span>Generar PDF ({{ selectedProducts.length }})</span>
-      </button>
-      <button 
-        (click)="generateBarcodesBatch()"
-        class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-        <i class="fas fa-barcode"></i>
-        <span>Generar Códigos</span>
-      </button>
-      <button 
-        (click)="goToNewProducto()"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-        <i class="fas fa-plus"></i>
-        <span>Nuevo Producto</span>
-      </button>
+      <!-- Botones de Excel -->
+      <div class="flex space-x-2 border-r border-gray-300 pr-3">
+        <button 
+          (click)="exportAllToExcel()"
+          class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm">
+          <i class="fas fa-file-excel"></i>
+          <span>Exportar Todo</span>
+        </button>
+        <button 
+          (click)="exportSelectedToExcel()"
+          [disabled]="selectedProducts.length === 0"
+          class="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm">
+          <i class="fas fa-file-excel"></i>
+          <span>Exportar ({{ selectedProducts.length }})</span>
+        </button>
+        <button 
+          (click)="showImportModal = true"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm">
+          <i class="fas fa-file-import"></i>
+          <span>Importar</span>
+        </button>
+      </div>
+      
+      <!-- Botones existentes -->
+      <div class="flex space-x-2">
+        <button 
+          (click)="generatePDF()"
+          [disabled]="selectedProducts.length === 0"
+          class="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm">
+          <i class="fas fa-file-pdf"></i>
+          <span>PDF ({{ selectedProducts.length }})</span>
+        </button>
+        <button 
+          (click)="generateBarcodesBatch()"
+          class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg flex items-center space-x-2 text-sm">
+          <i class="fas fa-barcode"></i>
+          <span>Generar Códigos</span>
+        </button>
+        <button 
+          (click)="goToNewProducto()"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+          <i class="fas fa-plus"></i>
+          <span>Nuevo Producto</span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -259,4 +285,10 @@
       Mostrando {{ filteredProductos.length }} productos
     </div>
   </div>
+
+  <!-- Modal de Importación Excel -->
+  <app-excel-import-modal 
+    [(isOpen)]="showImportModal"
+    (importCompleted)="onImportCompleted($event)">
+  </app-excel-import-modal>
 </div>

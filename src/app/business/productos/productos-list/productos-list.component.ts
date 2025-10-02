@@ -5,12 +5,14 @@ import { Router } from '@angular/router';
 import { ProductosService } from '../../../shared/services/productos.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { PdfService } from '../../../shared/services/pdf.service';
+import { ExcelService, ExcelImportResult } from '../../../shared/services/excel.service';
+import { ExcelImportModalComponent } from '../../../shared/components/excel-import-modal/excel-import-modal.component';
 import { Producto } from '../../../shared/models/producto.model';
 
 @Component({
   selector: 'app-productos-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ExcelImportModalComponent],
   templateUrl: './productos-list.component.html',
   styleUrl: './productos-list.component.css'
 })
@@ -24,6 +26,7 @@ export class ProductosListComponent implements OnInit {
   stats: any = null;
   selectAll = false;
   selectedProducts: Producto[] = [];
+  showImportModal = false;
 
   // Filtros disponibles
   stockFilters = [
@@ -38,6 +41,7 @@ export class ProductosListComponent implements OnInit {
     private productosService: ProductosService,
     private authService: AuthService,
     private pdfService: PdfService,
+    private excelService: ExcelService,
     private router: Router
   ) {}
 
@@ -332,5 +336,108 @@ export class ProductosListComponent implements OnInit {
     }
 
     this.pdfService.generateProductReport(this.selectedProducts);
+  }
+
+  // ========== MÉTODOS DE EXCEL ==========
+
+  /**
+   * Exporta todos los productos a Excel
+   */
+  exportAllToExcel(): void {
+    if (this.productos.length === 0) {
+      alert('No hay productos para exportar');
+      return;
+    }
+
+    try {
+      this.excelService.exportProductsToExcel(this.productos, {
+        filename: `todos_los_productos_${new Date().toISOString().split('T')[0]}.xlsx`
+      });
+    } catch (error) {
+      this.error = 'Error al exportar productos a Excel';
+      console.error('Error:', error);
+    }
+  }
+
+  /**
+   * Exporta productos seleccionados a Excel
+   */
+  exportSelectedToExcel(): void {
+    if (this.selectedProducts.length === 0) {
+      alert('Por favor selecciona al menos un producto para exportar');
+      return;
+    }
+
+    try {
+      this.excelService.exportSelectedProductsToExcel(this.selectedProducts);
+    } catch (error) {
+      this.error = 'Error al exportar productos seleccionados';
+      console.error('Error:', error);
+    }
+  }
+
+  /**
+   * Maneja el resultado de la importación desde Excel
+   */
+  onImportCompleted(result: ExcelImportResult): void {
+    if (result.success && result.data.length > 0) {
+      // Importar productos uno por uno
+      this.importProducts(result.data);
+    } else {
+      this.error = 'No se pudieron importar productos desde el archivo Excel';
+    }
+  }
+
+  /**
+   * Importa una lista de productos al sistema
+   */
+  private importProducts(products: Producto[]): void {
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
+
+    this.loading = true;
+
+    // Importar productos secuencialmente para evitar sobrecarga del servidor
+    const importNext = (index: number) => {
+      if (index >= products.length) {
+        // Importación completada
+        this.loading = false;
+        this.loadProductos(); // Recargar la lista
+        this.loadStats(); // Recargar estadísticas
+        
+        // Mostrar resultado
+        const message = `Importación completada:\n${successCount} productos importados exitosamente`;
+        if (errors.length > 0) {
+          alert(message + `\n${errorCount} errores:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`);
+        } else {
+          alert(message);
+        }
+        return;
+      }
+
+      const producto = products[index];
+      
+      // Crear el producto en el servidor
+      this.productosService.create(producto).subscribe({
+        next: (response) => {
+          if (response.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            errors.push(`Producto "${producto.descripcion}": ${response.message}`);
+          }
+          importNext(index + 1);
+        },
+        error: (error) => {
+          errorCount++;
+          errors.push(`Producto "${producto.descripcion}": Error de conexión`);
+          console.error('Error al importar producto:', error);
+          importNext(index + 1);
+        }
+      });
+    };
+
+    importNext(0);
   }
 }
