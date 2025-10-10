@@ -84,34 +84,7 @@
           </option>
         </select>
       </div>
-
-      <!-- Botones de filtros rápidos -->
-      <div class="flex flex-col space-y-2">
-        <button 
-          (click)="loadLowStock()"
-          class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-3 py-2 rounded-lg text-sm">
-          <i class="fas fa-exclamation-triangle mr-1"></i>
-          Stock Bajo
-        </button>
-        <button 
-          (click)="loadWithoutBarcode()"
-          class="bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-2 rounded-lg text-sm">
-          <i class="fas fa-barcode mr-1"></i>
-          Sin Código
-        </button>
-        <button 
-          (click)="loadTopSelling()"
-          class="bg-green-100 hover:bg-green-200 text-green-800 px-3 py-2 rounded-lg text-sm">
-          <i class="fas fa-chart-line mr-1"></i>
-          Más Vendidos
-        </button>
-        <button 
-          (click)="clearFilters()"
-          class="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-lg text-sm">
-          <i class="fas fa-times mr-1"></i>
-          Limpiar
-        </button>
-      </div>
+      
     </div>
   </div>
 
